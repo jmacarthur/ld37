@@ -88,6 +88,16 @@ function processKeys() {
     if(keysDown[38] || keysDown[87]) y -= 4;
     if(keysDown[37] || keysDown[65]) x -= 4;
     if(keysDown[39] || keysDown[68]) x += 4;
+
+    gamepads = navigator.getGamepads();
+    for(var i=0;i<gamepads.length;i++) {
+	if(gamepads[i] != null) {
+	    console.log("checking gamepad "+i+" button 0: "+gamepads[i].buttons[0].pressed);
+	    if(gamepads[i].buttons[0].pressed) x+=4;
+	}
+    }
+
+    
     if(x < 0) x = 0;
     if(x > SCREENWIDTH - playerImage.width)  x = SCREENHEIGHT - playerImage.width;
     if(y < 0) y = 0;
@@ -101,6 +111,17 @@ function drawRepeat() {
     draw();
     if(!stopRunloop) setTimeout('drawRepeat()',20);
 }
+
+window.addEventListener("gamepadconnected", function(e) {
+    console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+		e.gamepad.index, e.gamepad.id,
+		e.gamepad.buttons.length, e.gamepad.axes.length);
+});
+
+window.addEventListener("gamepaddisconnected", function(e) {
+    console.log("Gamepad disconnected from index %d: %s",
+		e.gamepad.index, e.gamepad.id);
+});
 
 if (canvas.getContext('2d')) {
     stopRunloop = false;
