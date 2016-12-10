@@ -1,8 +1,10 @@
+/// <reference path="draw_world.ts" />
+
+
 var b2CircleDef;
 var b2BodyDef;
 var b2PolyDef;
 
-var drawWorld;
 var b2RevoluteJointDef;
 var $;
 
@@ -13,6 +15,7 @@ var b2World;
 var ball;
 var ballBd;
 var ballShape;
+var direction : number = 90;
 
 class Pos {
     x: number;
@@ -77,6 +80,11 @@ var canvasHeight;
 var canvasTop;
 var canvasLeft;
 
+function processKeys() {
+    if(keysDown[40] || keysDown[83]) direction += 4;
+    if(keysDown[38] || keysDown[87]) direction -= 4;
+}
+
 function step(cnt) {
     var stepping = false;
     var timeStep = 1.0/60;
@@ -84,6 +92,7 @@ function step(cnt) {
     world.Step(timeStep, iteration);
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     drawWorld(world, ctx);
+    processKeys();
     setTimeout('step(' + (cnt || 0) + ')', 10);
 }
 
