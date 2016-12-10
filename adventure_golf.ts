@@ -20,6 +20,8 @@ var playerImage;
 var levelData;
 var SCREENWIDTH = 640;
 var SCREENHEIGHT = 480;
+var currentLevelName = "Entryway";
+
 function getImage(name)
 {
     var image = new Image();
@@ -117,16 +119,32 @@ function initWorld(world) {
 };
 
 var initId = 0;
-var world = createWorld();
+var world;
 var ctx;
 var canvasWidth;
 var canvasHeight;
 var canvasTop;
 var canvasLeft;
-
+var ballStartPos;
 function processKeys() {
     if(keysDown[37] || keysDown[65]) direction -= 4;
     if(keysDown[39] || keysDown[68]) direction += 4;
+}
+
+function changeScreens() {
+    var pos = ball.GetCenterPosition();
+    if(pos.y<32 && levels[currentLevelName].n_to !== undefined) {
+	ballStartPos = new b2Vec2(pos.x, 512-32-8);
+	currentLevelName = levels[currentLevelName].n_to;
+	resetLevel();
+	return;
+    }
+    if(pos.y>(512) && levels[currentLevelName].s_to !== undefined) {
+	ballStartPos = new b2Vec2(pos.x, 32+8);
+	currentLevelName = levels[currentLevelName].s_to;
+	resetLevel();
+	return;
+    }
 }
 
 function step(cnt) {
@@ -137,6 +155,7 @@ function step(cnt) {
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     drawWorld(world, ctx);
     processKeys();
+    changeScreens();
     setTimeout('step(' + (cnt || 0) + ')', 10);
 }
 
@@ -159,6 +178,11 @@ if (canvas.getContext('2d')) {
 	    var power = 500000;
 	    ball.ApplyImpulse( new b2Vec2(power*Math.cos(radians(direction)), power*Math.sin(radians(direction))), ball.GetCenterPosition() );
 	}
+	if(c == 78) {
+	    console.log("Changing level");
+	    currentLevelName = "Kitchen";
+	    resetLevel();
+	}
 	
     }
     body.onkeyup = function (event) {
@@ -166,17 +190,9 @@ if (canvas.getContext('2d')) {
 	keysDown[c] = false;
     }
 }
-
-function createWorld() {
-    var worldAABB = new b2AABB();
-    worldAABB.minVertex.Set(-1000, -1000);
-    worldAABB.maxVertex.Set(1000, 1000);
-    var gravity = new b2Vec2(0, 1);
-    var doSleep = true;
-    var world = new b2World(worldAABB, gravity, doSleep);
-
-    levelData = levels["Entryway"].map;
-
+    
+function addLevelBoxes(levelData : Array<string>, world:any) : void
+{
     for(var l = 0;l< levelData.length; l++) {
 	var line : string = levelData[l];
 	for (var x =0;x<line.length;x++) {
@@ -185,10 +201,23 @@ function createWorld() {
 	    }
 	}
     }
+}
+    
+function createWorld() {
+    var worldAABB = new b2AABB();
+    worldAABB.minVertex.Set(-1000, -1000);
+    worldAABB.maxVertex.Set(1000, 1000);
+    var gravity = new b2Vec2(0, 1);
+    var doSleep = true;
+    var world = new b2World(worldAABB, gravity, doSleep);
+
+    levelData = levels[currentLevelName].map;
+    
+    addLevelBoxes(levelData, world)
 
     createGround(world);
 
-    ball = createBall(world, 390, 96, 32, false, 1.0);
+    ball = createBall(world, ballStartPos.x, ballStartPos.y, 32, false, 1.0);
 
     return world;
 }
@@ -203,8 +232,20 @@ function createGround(world) {
     return world.CreateBody(groundBd)
 }
 
+function resetLevel(): void
+{
+    world = createWorld();
+    initWorld(world);
+}
+
+function firstTimeInit(): void
+{
+    ballStartPos = new b2Vec2(320,96);
+}
+
 var world;
 window.onload=function() {
+    firstTimeInit();
     world = createWorld();
     initWorld(world);
     playerImage = getImage("ball");
