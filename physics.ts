@@ -7,10 +7,10 @@ function radians(r) {
 }
 
 function lineIntersection(ballx, bally, ballxv, ballyv,
-			  lstartx, lstarty, lxv, lyv)
+			  lstartx, lstarty, lxv, lyv) : Array<number>
 {
-    j = (lstarty/ballyv - bally/ballyv + ballx/ballxv -lstartx/ballxv)/(lxv/ballxv -lyv/ballyv);
-    i = (lstartx+j*lxv-ballx)/ballxv;
+    var j = (lstarty/ballyv - bally/ballyv + ballx/ballxv -lstartx/ballxv)/(lxv/ballxv -lyv/ballyv);
+    var i = (lstartx+j*lxv-ballx)/ballxv;
     return [i,j];
 }
 
@@ -32,13 +32,12 @@ class TaggedPoint {
     }
 }
 
-
 class TaggedLine {
     x1: number;
     x2: number;
     y1: number;
     y2: number;
-    polygon: TaggedPolygon;
+    polygon: TaggedPoly;
     ident: string;
     
     constructor(x1, y1, x2, y2, polygon, lineid) {
@@ -51,18 +50,25 @@ class TaggedLine {
     }
 }
 
-function TaggedPoly(ident, pointarray, region) {
-    this.poly = pointarray;
-    this.region = region;
-    this.ident = ident;
-    this.alive = true;
+class TaggedPoly {
+    poly: Array<Array<number>>;
+    region: any;
+    ident: string;
+    alive: boolean;
+    
+    constructor(ident, pointarray, region) {
+	this.poly = pointarray;
+	this.region = region;
+	this.ident = ident;
+	this.alive = true;
+    }
 }
 
 function getTaggedPolyLines(taggedPolygon) : Array<TaggedLine>
 {
     var lines: Array<TaggedLine> = new Array();
-    poly = taggedPolygon.poly;
-    for(p=0;p<poly.length-1;p++) {
+    var poly = taggedPolygon.poly;
+    for(var p=0;p<poly.length-1;p++) {
         lines.push(new TaggedLine(poly[p][0],poly[p][1],poly[p+1][0],poly[p+1][1],taggedPolygon,p));
     }
     lines.push(new TaggedLine(poly[0][0],poly[0][1],poly[poly.length-1][0],poly[poly.length-1][1],taggedPolygon,p));
@@ -80,21 +86,23 @@ function Collision(ix,iy,dist,outAngle,obj)
 
 function intersectPoly(poly, collisions, ball, considerRadius, lastCollisionObjectID)
 {
-    lines = getTaggedPolyLines(poly);
+    var lines = getTaggedPolyLines(poly);
     var hitline = null;
-    lowi = 1.1;
+    var lowi = 1.1;
 
-    for(ln=0;ln<lines.length;ln++) {
-	l = lines[ln]
+    for(var ln=0;ln<lines.length;ln++) {
+	var l = lines[ln]
         if(l.ident == lastCollisionObjectID) continue;
-        lxv = l.x2-l.x1;
-	lyv = l.y2-l.y1;
-	lnormx = -lyv;
-        lnormy = lxv;
-        normScale = lineLen(lnormx,lnormy);
-        lnormx = lnormx / normScale;
-        lnormy = lnormy / normScale;
-        dotproduct = lnormx*ball.dx+lnormy*ball.dy;
+        var lxv = l.x2-l.x1;
+	var lyv = l.y2-l.y1;
+	var lnormx = -lyv;
+        var lnormy = lxv;
+        var normScale = lineLen(lnormx,lnormy);
+        var lnormx = lnormx / normScale;
+        var lnormy = lnormy / normScale;
+        var dotproduct = lnormx*ball.dx+lnormy*ball.dy;
+	var lstartx;
+	var lstarty;
         if(dotproduct>0) {
             lnormx = -lnormx;
             lnormy = -lnormy;
@@ -109,18 +117,17 @@ function intersectPoly(poly, collisions, ball, considerRadius, lastCollisionObje
             lstarty = l.y1;
 	}
 	
-        res = lineIntersection(ball.x,ball.y,ball.dx,ball.dy,
-                               lstartx,lstarty,lxv,lyv);
-        i = res[0];
-	j = res[1];
+        var res = lineIntersection(ball.x,ball.y,ball.dx,ball.dy,
+				   lstartx,lstarty,lxv,lyv);
+        var i = res[0];
+	var j = res[1];
         if(i>=0 && i<=1 && j>=0 && j<=1) {
             if(i<lowi) {
                 lowi = i;
                 hitline = l;
 	    }
-	}
-	
-        }
+	}	
+    }
     if(hitline != null) {
 	// Ok, now we can figure out the angle wrt the surface normal...
         lxv = hitline.x2 - hitline.x1;
@@ -137,14 +144,14 @@ function intersectPoly(poly, collisions, ball, considerRadius, lastCollisionObje
 	    lnormx = -lnormx;
 	    lnormy = -lnormy;
 	}
-        lenNormal = 1.0;
-        ballToIntersectX = lowi*ball.dx;
-        ballToIntersectY = lowi*ball.dy;
-        distToIntersect = Math.sqrt(ballToIntersectX*ballToIntersectX
+        var lenNormal = 1.0;
+        var ballToIntersectX = lowi*ball.dx;
+        var ballToIntersectY = lowi*ball.dy;
+        var distToIntersect = Math.sqrt(ballToIntersectX*ballToIntersectX
                                     +ballToIntersectY*ballToIntersectY);
         ballToIntersectX /= distToIntersect;
         ballToIntersectY /= distToIntersect;
-        angle = Math.acos(ballToIntersectX*lnormx+ballToIntersectY*lnormy);
+        var angle = Math.acos(ballToIntersectX*lnormx+ballToIntersectY*lnormy);
         console.log("Collision is at "+degrees(angle)+" degrees to surface normal");
         var normAngle = Math.atan2(lnormy,lnormx)+Math.PI;
         var incident = Math.atan2(ball.dy,ball.dx)+Math.PI;
