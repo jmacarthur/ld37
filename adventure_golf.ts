@@ -62,10 +62,7 @@ function pin(body1, body2, pos : Pos)
 }
 
 function initWorld(world) {
-    createBox(world, 25, 270, 10, 20, true);
-    createBox(world, 85, 270, 10, 20, true);
-    createBox(world, 145, 270, 10, 20, true);
-    var pendulum = createBox(world, 150, 100, 20, 20, false);
+    var pendulum = createBox(world, 150, 160, 20, 20, false);
     pin (pendulum, world.GetGroundBody(), pendulum.GetCenterPosition());
     var gradient = createPoly(world, 200, 200, [[0, 0], [200, -30], [200, 30]], true);
 };
@@ -123,9 +120,27 @@ function createWorld() {
     var gravity = new b2Vec2(0, 300);
     var doSleep = true;
     var world = new b2World(worldAABB, gravity, doSleep);
+
+    var levelData = new Array();
+    levelData.push("########");
+    levelData.push("#......#");
+    levelData.push("#.c....#");
+    levelData.push("#......#");
+    levelData.push("#......#");
+    levelData.push("#.#..#.#");
+    levelData.push("#......#");
+    levelData.push("########");
+
+    for(var l = 0;l< levelData.length; l++) {
+	var line : string = levelData[l];
+	for (var x =0;x<line.length;x++) {
+	    if(line[x] == '#') {
+		createBox(world, x*64+32, l*64+32, 32, 32, true);
+	    }
+	}
+    }
+
     createGround(world);
-    createBox(world, 0, 125, 10, 250, true);
-    createBox(world, 500, 125, 10, 250, true);
     return world;
 }
 
