@@ -100,8 +100,8 @@ var canvasTop;
 var canvasLeft;
 
 function processKeys() {
-    if(keysDown[40] || keysDown[83]) direction += 4;
-    if(keysDown[38] || keysDown[87]) direction -= 4;
+    if(keysDown[37] || keysDown[65]) direction -= 4;
+    if(keysDown[39] || keysDown[68]) direction += 4;
 }
 
 function step(cnt) {
@@ -131,7 +131,8 @@ if (canvas.getContext('2d')) {
 	}
 	if(c == 32) {
 	    // Impulse is divided by mass, so needs to be large.
-	    ball.ApplyImpulse( new b2Vec2(0,500000), ball.GetCenterPosition() );
+	    var power = 500000;
+	    ball.ApplyImpulse( new b2Vec2(power*Math.cos(radians(direction)), power*Math.sin(radians(direction))), ball.GetCenterPosition() );
 	}
 	
     }
