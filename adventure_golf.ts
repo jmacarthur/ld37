@@ -79,6 +79,12 @@ function drawWorld(world, context) {
 		}
 	    } else if(line[x] == 'v') {
 		imageName = "slope_south";
+	    } else if(line[x] == '^') {
+		imageName = "slope_north";
+	    } else if(line[x] == '<') {
+		imageName = "slope_west";
+	    } else if(line[x] == '>') {
+		imageName = "slope_east";
 	    } else {
 		imageName = "floor";
 	    }
@@ -244,7 +250,7 @@ function checkStopped()
 {
     var vel = ball.GetLinearVelocity();
     var speed = vel.x*vel.x + vel.y*vel.y;
-    if(speed < 500 && currentTile != "v") {
+    if(speed < 500 && currentTile != "v" && currentTile != "<" && currentTile != ">" && currentTile != "^") {
 	ball.SetLinearVelocity(new b2Vec2(0,0));
 	ball.SetAngularVelocity(0);
 	console.log("Detected stopped ball");
@@ -265,6 +271,12 @@ function checkTile()
 	if(par<5) par = 5;
     } else if (levelData[y][x] == "v") {
 	ball.ApplyForce( new b2Vec2(0,500000), ball.GetCenterPosition() );
+    } else if (levelData[y][x] == "^") {
+	ball.ApplyForce( new b2Vec2(0,-500000), ball.GetCenterPosition() );
+    } else if (levelData[y][x] == "<") {
+	ball.ApplyForce( new b2Vec2(-500000,0), ball.GetCenterPosition() );
+    } else if (levelData[y][x] == ">") {
+	ball.ApplyForce( new b2Vec2(500000,0), ball.GetCenterPosition() );
     }
 
 }
@@ -356,7 +368,7 @@ function firstTimeInit(): void
     ballStartPos = new b2Vec2(320,96);
     playerImage = getImage("ball");
     images = new Array();
-    imagelist = [ "floor", "arrow", "bitfont", "recharger", "recharger-lit", "wall", "sidebar", "slope_south" ];
+    imagelist = [ "floor", "arrow", "bitfont", "recharger", "recharger-lit", "wall", "sidebar", "slope_south","slope_north","slope_east","slope_west" ];
     for(var i=0;i<imagelist.length;i++) {
 	images[imagelist[i]] = getImage(imagelist[i]);
     }
