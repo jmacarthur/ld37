@@ -22,7 +22,8 @@ var SCREENWIDTH = 640;
 var SCREENHEIGHT = 480;
 var currentLevelName = "Entryway";
 var wallImage;
-
+var floorImage;
+var arrowImage;
 function getImage(name)
 {
     var image = new Image();
@@ -44,26 +45,29 @@ function drawWorld(world, context) {
     ctx.fillStyle = "#7f7f7f";
     ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
 
+    for(var l = 0;l< levelData.length; l++) {
+	var line : string = levelData[l];
+	for (var x =0;x<line.length;x++) {
+	    if(line[x] == '#') {
+		context.drawImage(wallImage, x*64, l*64);
+	    } else {
+		context.drawImage(floorImage, x*64, l*64);
+	    }
+	}
+    }
+
+    var pos = ball.GetCenterPosition();
+    context.drawImage(playerImage, pos.x-32, pos.y-32);
+    context.moveTo(pos.x, pos.y);
+    context.lineTo(pos.x + 64*Math.cos(radians(direction)), pos.y+64*Math.sin(radians(direction)));
+    context.stroke();
     for (var b = world.m_bodyList; b; b = b.m_next) {
 	for (var s = b.GetShapeList(); s != null; s = s.GetNext()) {
 	    // I don't know why, but if we don't call this, the game slows down enormously
 	    drawShape(s, context);
 	}
     }
-    var pos = ball.GetCenterPosition();
-    context.drawImage(playerImage, pos.x-32, pos.y-32);
-    context.moveTo(pos.x, pos.y);
-    context.lineTo(pos.x + 64*Math.cos(radians(direction)), pos.y+64*Math.sin(radians(direction)));
-    context.stroke();
 
-    for(var l = 0;l< levelData.length; l++) {
-	var line : string = levelData[l];
-	for (var x =0;x<line.length;x++) {
-	    if(line[x] == '#') {
-		context.drawImage(wallImage, x*64, l*64);
-	    }
-	}
-    }
 }
 
 function createBox(world, x, y, width, height, fixed = false) {
@@ -81,7 +85,7 @@ function createBall(world, x, y, rad, fixed = false, density = 1.0) {
     ballShape = new b2CircleDef();
     if (!fixed) ballShape.density = density;
     ballShape.radius = rad || 10;
-    ballShape.restitution = 0.2;
+    ballShape.restitution = 0.1;
     ballBd = new b2BodyDef();
     ballBd.AddShape(ballShape);
     ballBd.position.Set(x,y);
@@ -186,6 +190,7 @@ if (canvas.getContext('2d')) {
 	if(c == 32) {
 	    // Impulse is divided by mass, so needs to be large.
 	    var power = 5000000;
+	    ball.WakeUp();
 	    ball.ApplyImpulse( new b2Vec2(power*Math.cos(radians(direction)), power*Math.sin(radians(direction))), ball.GetCenterPosition() );
 	}
 	if(c == 78) {
@@ -217,7 +222,7 @@ function createWorld() {
     var worldAABB = new b2AABB();
     worldAABB.minVertex.Set(-1000, -1000);
     worldAABB.maxVertex.Set(1000, 1000);
-    var gravity = new b2Vec2(0, 1);
+    var gravity = new b2Vec2(0, 0);
     var doSleep = true;
     var world = new b2World(worldAABB, gravity, doSleep);
 
@@ -227,7 +232,7 @@ function createWorld() {
 
     createGround(world);
 
-    ball = createBall(world, ballStartPos.x, ballStartPos.y, 32, false, 1.0);
+    ball = createBall(world, ballStartPos.x, ballStartPos.y, 30, false, 1.0);
 
     return world;
 }
@@ -260,6 +265,7 @@ window.onload=function() {
     initWorld(world);
     playerImage = getImage("ball");
     wallImage = getImage("wall");
+    floorImage = getImage("floor");
     ctx = $('canvas').getContext('2d');
     var canvasElm = $('canvas');
     canvasWidth = parseInt(canvasElm.width);
