@@ -21,9 +21,10 @@ var levelData;
 var SCREENWIDTH = 640;
 var SCREENHEIGHT = 480;
 var currentLevelName = "Entryway";
-var wallImage;
-var floorImage;
-var arrowImage;
+
+var images : Array<any>;
+var launchPower: number;
+
 function getImage(name)
 {
     var image = new Image();
@@ -49,25 +50,50 @@ function drawWorld(world, context) {
 	var line : string = levelData[l];
 	for (var x =0;x<line.length;x++) {
 	    if(line[x] == '#') {
-		context.drawImage(wallImage, x*64, l*64);
+		context.drawImage(images["wall"], x*64, l*64);
 	    } else {
-		context.drawImage(floorImage, x*64, l*64);
+		context.drawImage(images["floor"], x*64, l*64);
 	    }
 	}
     }
 
     var pos = ball.GetCenterPosition();
     context.drawImage(playerImage, pos.x-32, pos.y-32);
-    context.moveTo(pos.x, pos.y);
-    context.lineTo(pos.x + 64*Math.cos(radians(direction)), pos.y+64*Math.sin(radians(direction)));
-    context.stroke();
+
+
+    if(ball.IsSleeping()) {
+
+	context.save();
+	context.translate(pos.x, pos.y);
+	context.rotate(radians(direction));
+	context.drawImage(images["arrow"],-16,-16);
+	context.restore();
+    }
+
     for (var b = world.m_bodyList; b; b = b.m_next) {
 	for (var s = b.GetShapeList(); s != null; s = s.GetNext()) {
 	    // I don't know why, but if we don't call this, the game slows down enormously
 	    drawShape(s, context);
 	}
     }
-
+    if(launchPower > 0) {
+	context.strokeStyle = "#000000";
+	context.fillStyle = "#00ff00";
+	context.fillRect(8,512-8-32,launchPower, 32);
+	if(launchPower > 50) {
+	    context.fillStyle = "#ffff00";
+	    context.fillRect(58,512-8-32,launchPower-50, 32);
+	}
+	if(launchPower > 75) {
+	    context.fillStyle = "#ff0000";
+	    context.fillRect(75+8,512-8-32,launchPower-75, 32);
+	}
+	context.rect(8,512-8-32,launchPower, 32);
+	context.lineWidth = 5;
+	context.stroke();
+	context.lineWidth = 1;
+    }
+    context.stroke();
 }
 
 function createBox(world, x, y, width, height, fixed = false) {
@@ -85,10 +111,13 @@ function createBall(world, x, y, rad, fixed = false, density = 1.0) {
     ballShape = new b2CircleDef();
     if (!fixed) ballShape.density = density;
     ballShape.radius = rad || 10;
-    ballShape.restitution = 0.1;
+    ballShape.restitution = 0.9; // How bouncy the ball is
+    ballShape.friction =0;
     ballBd = new b2BodyDef();
     ballBd.AddShape(ballShape);
+    ballBd.linearDamping = 0.01;
     ballBd.position.Set(x,y);
+    ballBd.friction =0;
     return world.CreateBody(ballBd);
 };
 
@@ -131,6 +160,23 @@ var ballStartPos;
 function processKeys() {
     if(keysDown[37] || keysDown[65]) direction -= 4;
     if(keysDown[39] || keysDown[68]) direction += 4;
+
+    if(keysDown[32]) {
+	console.log("Launch!");
+	if(launchPower < 100) {
+	    launchPower += 1;
+	    console.log("Launch power = "+launchPower);
+	}
+    } else if (launchPower > 0) {
+	// Impulse is divided by mass, so needs to be large.
+	if(ball.IsSleeping()) {
+	    var power = launchPower * 10000;
+	    ball.WakeUp();
+	    ball.ApplyImpulse( new b2Vec2(power*Math.cos(radians(direction)), power*Math.sin(radians(direction))), ball.GetCenterPosition() );
+	}
+	launchPower = 0;
+    }
+
 }
 
 function changeScreens() {
@@ -161,6 +207,17 @@ function changeScreens() {
     }
 }
 
+function checkStopped()
+{
+    var vel = ball.GetLinearVelocity();
+    var speed = vel.x*vel.x + vel.y*vel.y;
+    if(speed < 5) {
+	ball.SetLinearVelocity(new b2Vec2(0,0));
+	ball.SetAngularVelocity(0);
+	console.log("Detected stopped ball");
+    }
+}
+
 function step(cnt) {
     var stepping = false;
     var timeStep = 1.0/60;
@@ -170,6 +227,7 @@ function step(cnt) {
     drawWorld(world, ctx);
     processKeys();
     changeScreens();
+    checkStopped();
     setTimeout('step(' + (cnt || 0) + ')', 10);
 }
 
@@ -187,18 +245,7 @@ if (canvas.getContext('2d')) {
 	if(c == 81) {
 	    console.log("Quit!");
 	}
-	if(c == 32) {
-	    // Impulse is divided by mass, so needs to be large.
-	    var power = 5000000;
-	    ball.WakeUp();
-	    ball.ApplyImpulse( new b2Vec2(power*Math.cos(radians(direction)), power*Math.sin(radians(direction))), ball.GetCenterPosition() );
-	}
-	if(c == 78) {
-	    console.log("Changing level");
-	    currentLevelName = "Kitchen";
-	    resetLevel();
-	}
-	
+	console.log("Key down: "+c);
     }
     body.onkeyup = function (event) {
 	var c = event.keyCode;
@@ -256,6 +303,12 @@ function resetLevel(): void
 function firstTimeInit(): void
 {
     ballStartPos = new b2Vec2(320,96);
+    playerImage = getImage("ball");
+    images = new Array();
+    images["wall"] = getImage("wall");
+    images["floor"] = getImage("floor");
+    images["arrow"] = getImage("arrow");
+    launchPower = 0;
 }
 
 var world;
@@ -263,9 +316,6 @@ window.onload=function() {
     firstTimeInit();
     world = createWorld();
     initWorld(world);
-    playerImage = getImage("ball");
-    wallImage = getImage("wall");
-    floorImage = getImage("floor");
     ctx = $('canvas').getContext('2d');
     var canvasElm = $('canvas');
     canvasWidth = parseInt(canvasElm.width);
