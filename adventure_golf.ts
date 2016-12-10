@@ -103,7 +103,7 @@ function drawWorld(world, context) {
 	}
     }
     context.drawImage(images["sidebar"], 576,0);
-    drawString(context, ""+par, 576+8, 64);
+    drawString(context, ""+par, 576+24, 48);
 
     var powerBarX = 576+12;
     var powerBarY = 576-12;
@@ -192,10 +192,10 @@ function processKeys() {
     if(keysDown[39] || keysDown[68]) direction += 4;
 
     if(keysDown[32]) {
-	console.log("Launch!");
-	if(launchPower < 100) {
-	    launchPower += 1;
-	    console.log("Launch power = "+launchPower);
+	if(ball.IsSleeping() && par > 0) {
+	    if(launchPower < 100) {
+		launchPower += 1;
+	    }
 	}
     } else if (launchPower > 0) {
 	// Impulse is divided by mass, so needs to be large.
