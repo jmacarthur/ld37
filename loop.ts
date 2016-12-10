@@ -17,6 +17,8 @@ var titlectx;
 var titleBitmap;
 var fragments : Array<TaggedPoly>;
 
+var levelData: Array<string>;
+
 function getImage(name)
 {
     var image = new Image();
@@ -67,16 +69,29 @@ function resetGame()
     y = 128;
 }
 
-function loadPolygon(line)
+class Polygon {
+    points: Array<Array<number>>;
+    constructor() {
+	this.points = new Array();
+    }
+    translate(x:number, y:number) : void {
+	for(var p=0;p<this.points.length;p++)
+	{
+	    this.points[p] = [this.points[p][0]+x, this.points[p][1]+y];
+	}
+    }
+}
+
+function loadPolygon(line) : Array<Array<number>>
 {
-    poly = new Array();
+    poly = new Polygon();
     scale = 0.5;
     pointArray = line.split(" ");
     for(var p=0;p < pointArray.length;p++) {
 	point = pointArray[p];
 	xy = point.split(",");
 	// polygons are specified on a 1-1000 scale.
-	poly.push([(xy[0]-500)*scale+320, xy[1]*scale]); 
+	poly.points.push([(xy[0]-500)*scale+320, xy[1]*scale]); 
     }
     return poly;
 }
@@ -91,8 +106,30 @@ function loadFragments()
     
     for(var l = 0;l< lineArray.length; l++) {
 	line = lineArray[l];
-	poly = loadPolygon(line);
-	fragments.push(new TaggedPoly("outline"+l, poly, null));
+	var poly : Polygon = loadPolygon(line);
+	fragments.push(new TaggedPoly("outline"+l, poly.points, null));
+    }
+
+    // Now load some wall structures
+    levelData = new Array();
+    levelData.push("########");
+    levelData.push("#......#");
+    levelData.push("#......#");
+    levelData.push("#......#");
+    levelData.push("#......#");
+    levelData.push("#.#..#.#");
+    levelData.push("#......#");
+    levelData.push("########");
+
+    for(var l = 0;l< levelData.length; l++) {
+	line = levelData[l];
+	for (var x =0;x<line.length;x++) {
+	    if(line[x] == '#') {
+		poly = loadPolygon("0,0 128,0 128,128 0,128");
+		poly.translate(x*64, l*64);
+		fragments.push(new TaggedPoly("wall"+l+x, poly.points, null));
+	    }
+	}
     }
 }
 
@@ -195,7 +232,7 @@ function animate()
 	    }	
 	}
 	
-	intersectVertices(points, collisions, ball.x,ball.y,ball.dx,ball.dy, ball.radius,lastCollisionObjectID)
+	intersectVertices(points, collisions, ball.x,ball.y,ball.dx,ball.dy, ball.radius,lastCollisionObjectID);
 	closestDist = 1.1;
 	
 	for(c=0;c<collisions.length;c++) {
