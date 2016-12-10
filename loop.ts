@@ -19,7 +19,7 @@ var levelData: Array<string>;
 enum GameMode { TITLE, PLAY, WIN };
 
 var mode : GameMode;
-//var stopRunloop: boolean = false;
+var stopRunloop: boolean = false;
 
 function getImage(name)
 {
@@ -219,25 +219,26 @@ function animate()
     lastCollisionObjectID = null;
     {
 	for(f=0;f<fragments.length;f++) {
-	    poly = fragments[f];
+	    var poly : TaggedPoly = fragments[f];
 	    lastCollisionObjectID = "";
 	    intersectPoly(poly, collisions, ball, 1, lastCollisionObjectID);
 	}
 	
-	points = new Array();
+	var points : Array<TaggedPoint> = new Array();
 	for(f=0;f<fragments.length;f++) {
-	    poly = fragments[f];
+	    var poly : TaggedPoly = fragments[f];
 	    if(poly.alive == false) continue;
 	    for(p=0;p<poly.poly.length;p++) {
 		points.push(new TaggedPoint(poly.poly[p], poly, p));
 	    }	
 	}
-	
+
+	// This populates "collisions"
 	intersectVertices(points, collisions, ball.x,ball.y,ball.dx,ball.dy, ball.radius,lastCollisionObjectID);
 	closestDist = 1.1;
 	
 	for(c=0;c<collisions.length;c++) {
-	    col = collisions[c];
+	    col = collisions[c]; // At some point collisions[c] was undefined
 	    console.log(col.ix, col.iy, col.dist, col.outAngle);
 	    if(col.dist < closestDist) {
 		closest = col;

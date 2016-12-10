@@ -23,7 +23,7 @@ class TaggedPoint {
     x1: number;
     y1: number;
     ident: string;
-    polygon: any;
+    polygon: TaggedPoly;
     constructor(coords, polygon, pointid) {
 	this.x1 = coords[0];
 	this.y1 = coords[1];
@@ -75,13 +75,20 @@ function getTaggedPolyLines(taggedPolygon) : Array<TaggedLine>
     return lines;
 }
 
-function Collision(ix,iy,dist,outAngle,obj)
-{
-    this.ix = ix;
-    this.iy = iy;
-    this.dist = dist;
-    this.outAngle = outAngle;
-    this.obj = obj;
+class Collision {
+    ix : number;
+    iy : number;
+    dist: number;
+    outAngle: number;
+    obj: number;
+    constructor(ix,iy,dist,outAngle,obj)
+    {
+	this.ix = ix;
+	this.iy = iy;
+	this.dist = dist;
+	this.outAngle = outAngle;
+	this.obj = obj;
+    }
 }
 
 function intersectPoly(poly, collisions, ball, considerRadius, lastCollisionObjectID)
@@ -178,7 +185,7 @@ function checkClosestApproach(point: TaggedPoint, startx: number, starty: number
     return [dist,i];
 }
 
-function intersectVertices(points, collisions, ballx,bally,ballxv,ballyv, ballRadius,lastCollisionObjectID) : void
+function intersectVertices(points : Array<TaggedPoint>, collisions: Array<Collision>, ballx,bally,ballxv,ballyv, ballRadius,lastCollisionObjectID) : void
 {
     for(var pointindex=0;pointindex<points.length;pointindex++) {
 	var p : TaggedPoint = points[pointindex];
@@ -203,6 +210,7 @@ function intersectVertices(points, collisions, ballx,bally,ballxv,ballyv, ballRa
 		// Horrible way to get the polygon of this point by parsing the ident...
 		var split = p.ident.indexOf("-");
 		var polyNum = p.ident.slice(4,split);
+		console.log("Adding collision with fragment "+polyNum+" ("+p.ident+"): "+fragments[polyNum]+" to list");
                 collisions.push(new Collision(ix,iy, iPoint, outangle, fragments[polyNum]))
 	    }
 	}
