@@ -1,13 +1,3 @@
-function drawWorld(world, context) {
-	for (var j = world.m_jointList; j; j = j.m_next) {
-		drawJoint(j, context);
-	}
-	for (var b = world.m_bodyList; b; b = b.m_next) {
-		for (var s = b.GetShapeList(); s != null; s = s.GetNext()) {
-			drawShape(s, context);
-		}
-	}
-}
 function drawJoint(joint, context) {
 	var b1 = joint.m_body1;
 	var b2 = joint.m_body2;

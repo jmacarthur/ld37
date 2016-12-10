@@ -22,6 +22,25 @@ class Pos {
     y: number;
 }
 
+function radians(r) {
+    return r*(Math.PI/180);
+}
+
+function drawWorld(world, context) {
+	for (var j = world.m_jointList; j; j = j.m_next) {
+		drawJoint(j, context);
+	}
+	for (var b = world.m_bodyList; b; b = b.m_next) {
+		for (var s = b.GetShapeList(); s != null; s = s.GetNext()) {
+			drawShape(s, context);
+		}
+	}
+    var pos = ball.GetCenterPosition();
+    context.moveTo(pos.x, pos.y);
+    context.lineTo(pos.x + 64*Math.cos(radians(direction)), pos.y+64*Math.sin(radians(direction)));
+    context.stroke();
+}
+
 function createBox(world, x, y, width, height, fixed = false) {
     if (typeof(fixed) == 'undefined') fixed = true;
     var boxSd = new b2BoxDef();
