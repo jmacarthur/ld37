@@ -139,9 +139,21 @@ function changeScreens() {
 	resetLevel();
 	return;
     }
-    if(pos.y>(512) && levels[currentLevelName].s_to !== undefined) {
+    if(pos.y>512 && levels[currentLevelName].s_to !== undefined) {
 	ballStartPos = new b2Vec2(pos.x, 32+8);
 	currentLevelName = levels[currentLevelName].s_to;
+	resetLevel();
+	return;
+    }
+    if(pos.x>512 && levels[currentLevelName].e_to !== undefined) {
+	ballStartPos = new b2Vec2(32+8,pos.y);
+	currentLevelName = levels[currentLevelName].e_to;
+	resetLevel();
+	return;
+    }
+    if(pos.x < 32 && levels[currentLevelName].w_to !== undefined) {
+	ballStartPos = new b2Vec2(512-38-8, pos.y)
+	currentLevelName = levels[currentLevelName].w_to;
 	resetLevel();
 	return;
     }
