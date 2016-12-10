@@ -96,6 +96,7 @@ function loadFragments()
 	line = lineArray[l];
 	poly = loadPolygon(line);
 	outline.push(new TaggedPoly("outline"+l, poly, null));
+	fragments.push(new TaggedPoly("outline"+l, poly, null));
     }
 }
 
@@ -143,8 +144,8 @@ function draw() {
 	return;
     }
 
-    ctx.drawImage(playerImage, x, y);
     drawOutline();
+    ctx.drawImage(playerImage, x, y);
 
     if(mode == MODE_WIN) {
 	ctx.drawImage(winBitmap, 0, 0);
@@ -194,10 +195,54 @@ function lineLen(x,y)
     return Math.sqrt(x*x+y*y);
 }
 
+function TaggedPoint(coords, polygon, pointid)
+{
+    this.x1 = coords[0];
+    this.y1 = coords[1];
+    this.ident = polygon.ident+"-"+pointid;
+    this.polygon = polygon
+}
+
+
+function TaggedLine(x1, y1, x2, y2, polygon, lineid){
+    this.x1 = x1;
+    this.x2 = x2;
+    this.y1 = y1;
+    this.y2 = y2;
+    this.polygon = polygon;
+    this.ident = polygon.ident+"-l"+lineid;
+}
+
+function TaggedPoly(ident, pointarray, region) {
+    this.poly = pointarray;
+    this.region = region;
+    this.ident = ident;
+    this.alive = true;
+}
+
+
+function getTaggedPolyLines(taggedPolygon)
+{
+    lines = new Array();
+    poly = taggedPolygon.poly;
+    for(p=0;p<poly.length-1;p++) {
+        lines.push(new TaggedLine(poly[p][0],poly[p][1],poly[p+1][0],poly[p+1][1],taggedPolygon,p));
+    }
+    lines.push(new TaggedLine(poly[0][0],poly[0][1],poly[poly.length-1][0],poly[poly.length-1][1],taggedPolygon,p));
+    return lines;
+}
+
+function Collision(ix,iy,dist,outAngle,obj)
+{
+    this.ix = ix;
+    this.iy = iy;
+    this.dist = dist;
+    this.outAngle = outAngle;
+    this.obj = obj;
+}
 
 function intersectPoly(poly, collisions, ball, considerRadius, lastCollisionObjectID)
 {
-    if(!poly.alive) return;
     lines = getTaggedPolyLines(poly);
     hitline = null;
     lowi = 1.1;
@@ -369,22 +414,10 @@ function animate()
 	// TODO: At the moment we only do one collision per check - we could get into trouble this way...
 	ctx.lineTo(x,y);
 	ctx.stroke();
-	if (shattered) {
+	{
 	    closest.obj.alive = false;
 
-	    score += 2;
-	    totalFragments -= 1;
-	    if(totalFragments <= 1) {
-		// For some reason we always have 1 fragment left when the game's finished...
-		winTimeout = 100;
-		winSound.play();
-	    }
-	    smashNoise[2+randint(3)].play();
-	    console.log("Fragments remaining: "+totalFragments);
-	} else {
-	    shattered = true;
-	    smashNoise[randint(2)].play();
-	    }
+	} 
     } else {
 	x += dx;
 	y += dy;
