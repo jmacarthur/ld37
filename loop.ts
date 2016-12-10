@@ -84,9 +84,6 @@ function loadPolygon(line)
 function loadFragments()
 {
     fragments = new Array();
-    outline = new Array();
-    colours = new Array();
-    borderColours = new Array();
 
     totalFragments = 0;
 
@@ -95,7 +92,6 @@ function loadFragments()
     for(var l = 0;l< lineArray.length; l++) {
 	line = lineArray[l];
 	poly = loadPolygon(line);
-	outline.push(new TaggedPoly("outline"+l, poly, null));
 	fragments.push(new TaggedPoly("outline"+l, poly, null));
     }
 }
@@ -116,14 +112,14 @@ function nextRoom()
     loadFragments();
 }
 
-function drawOutline()
+function drawPolygons()
 {
     
     ctx.fillStyle = 'white';
     ctx.beginPath();
     ctx.strokeWidth=4;
-    for(f=0;f<outline.length;f++) {
-	poly = outline[f].poly;
+    for(f=0;f<fragments.length;f++) {
+	poly = fragments[f].poly;
 	ctx.moveTo(poly[0][0], poly[0][1]);
 	for(p=1;p<poly.length;p++) {
 	    point = poly[p];
@@ -144,7 +140,7 @@ function draw() {
 	return;
     }
 
-    drawOutline();
+    drawPolygons();
     ctx.drawImage(playerImage, x-32, y-32);
 
     if(mode == MODE_WIN) {
