@@ -115,6 +115,25 @@ function nextRoom()
     loadFragments();
 }
 
+function drawOutline()
+{
+    
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.strokeWidth=4;
+    for(f=0;f<outline.length;f++) {
+	poly = outline[f].poly;
+	ctx.moveTo(poly[0][0], poly[0][1]);
+	for(p=1;p<poly.length;p++) {
+	    point = poly[p];
+	    ctx.lineTo(point[0], point[1]);
+	}
+    }
+    ctx.closePath();
+    ctx.fill();
+}
+
+
 function draw() {
     ctx.fillStyle = "#0000ff";
     ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
@@ -125,6 +144,7 @@ function draw() {
     }
 
     ctx.drawImage(playerImage, x, y);
+    drawOutline();
 
     if(mode == MODE_WIN) {
 	ctx.drawImage(winBitmap, 0, 0);
