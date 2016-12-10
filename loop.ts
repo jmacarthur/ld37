@@ -6,9 +6,6 @@ var body = document.getElementsByTagName('body')[0];
 var keysDown = new Array();
 var SCREENWIDTH  = 640;
 var SCREENHEIGHT = 480;
-var MODE_TITLE = 0;
-var MODE_PLAY  = 1;
-var MODE_WIN   = 2;
 
 var x = 0, y = 0, dx = 3, dy=4;
 var ballRadius = 32;
@@ -18,6 +15,11 @@ var titleBitmap;
 var fragments : Array<TaggedPoly>;
 
 var levelData: Array<string>;
+
+enum GameMode { TITLE, PLAY, WIN };
+
+var mode : GameMode;
+//var stopRunloop: boolean = false;
 
 function getImage(name)
 {
@@ -133,10 +135,9 @@ function loadFragments()
     }
 }
 
-
 function init() : boolean
 {
-    mode = MODE_TITLE;
+    mode = GameMode.TITLE;
     playerImage = getImage("ball");
     springSound = new Audio("audio/boing.wav");
     makeTitleBitmaps();
@@ -172,7 +173,7 @@ function draw() {
     ctx.fillStyle = "#0000ff";
     ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
 
-    if(mode == MODE_TITLE) {
+    if(mode == GameMode.TITLE) {
 	ctx.drawImage(titleBitmap, 0, 0);
 	return;
     }
@@ -180,7 +181,7 @@ function draw() {
     drawPolygons();
     ctx.drawImage(playerImage, x-32, y-32);
 
-    if(mode == MODE_WIN) {
+    if(mode == GameMode.WIN) {
 	ctx.drawImage(winBitmap, 0, 0);
     }
 }
@@ -274,7 +275,7 @@ function animate()
 }
 
 function drawRepeat() {
-    if(mode != MODE_TITLE) {
+    if(mode != GameMode.TITLE) {
 	processKeys();
 	animate();
     }
@@ -303,14 +304,14 @@ if (canvas.getContext('2d')) {
 	    stopRunloop=true;
 	}
 	if(c == 32) {
-	    if(mode == MODE_TITLE) {
+	    if(mode == GameMode.TITLE) {
 		resetGame();
-		mode = MODE_PLAY;
+		mode = GameMode.PLAY;
 	    }
 	}
 	if(c == 82) {
-	    if(mode == MODE_WIN) {
-		mode = MODE_TITLE;
+	    if(mode == GameMode.WIN) {
+		mode = GameMode.TITLE;
 	    }
 	}
     };
