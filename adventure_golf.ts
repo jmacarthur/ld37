@@ -19,12 +19,13 @@ var direction : number = 90;
 var playerImage;
 var levelData;
 var SCREENWIDTH = 640;
-var SCREENHEIGHT = 480;
+var SCREENHEIGHT = 576;
 var currentLevelName = "Entryway";
 var par;
 var images : Array<any>;
 var launchPower: number;
 var saveRoom;
+var gridSize = 48;
 
 function getImage(name)
 {
@@ -66,17 +67,19 @@ function drawWorld(world, context) {
     for(var l = 0;l< levelData.length; l++) {
 	var line : string = levelData[l];
 	for (var x =0;x<line.length;x++) {
+	    var imageName = "";
 	    if(line[x] == '#') {
-		context.drawImage(images["wall"], x*64, l*64);
+		imageName = "wall";
 	    } else if(line[x] == '@') {
 		if(currentLevelName == saveRoom) {
-		    context.drawImage(images["recharger-lit"], x*64, l*64);
+		    imageName = "recharger-lit";
 		} else {
-		    context.drawImage(images["recharger"], x*64, l*64);
+		    imageName = "recharger";
 		}
 	    } else {
-		context.drawImage(images["floor"], x*64, l*64);
+		imageName = "floor";
 	    }
+	    context.drawImage(images[imageName], x*gridSize, l*gridSize);
 	}
     }
 
@@ -99,25 +102,28 @@ function drawWorld(world, context) {
 	    drawShape(s, context);
 	}
     }
+    context.drawImage(images["sidebar"], 576,0);
+    drawString(context, ""+par, 576+8, 64);
+
+    var powerBarX = 576+12;
+    var powerBarY = 576-12;
+    var powerBarWidth = 39;
     if(launchPower > 0) {
 	context.strokeStyle = "#000000";
 	context.fillStyle = "#00ff00";
-	context.fillRect(8,512-8-32,launchPower, 32);
+	
+	context.fillRect(powerBarX, powerBarY-launchPower, powerBarWidth, launchPower);
 	if(launchPower > 50) {
 	    context.fillStyle = "#ffff00";
-	    context.fillRect(58,512-8-32,launchPower-50, 32);
+	    context.fillRect(powerBarX, powerBarY-launchPower, powerBarWidth, launchPower-50);
 	}
 	if(launchPower > 75) {
 	    context.fillStyle = "#ff0000";
-	    context.fillRect(75+8,512-8-32,launchPower-75, 32);
+	    context.fillRect(powerBarX, powerBarY-launchPower, powerBarWidth, launchPower-75);
 	}
-	context.rect(8,512-8-32,launchPower, 32);
-	context.lineWidth = 5;
 	context.stroke();
-	context.lineWidth = 1;
     }
 
-    drawString(context, "P.A.R. "+par, 512+8, 8);
 }
 
 function createBox(world, x, y, width, height, fixed = false) {
@@ -246,11 +252,12 @@ function checkStopped()
 function checkTile()
 {
     var pos = ball.GetCenterPosition();
-    var x = Math.floor(pos.x/64);
-    var y = Math.floor(pos.y/64);
+    var x = Math.floor(pos.x/gridSize);
+    var y = Math.floor(pos.y/gridSize);
     if (levelData[y][x] == "@") {
 	console.log("Passing over regenerator tile!");
 	saveRoom = currentLevelName;
+	if(par<3) par = 3;
     }
 }
 function step(cnt) {
@@ -295,7 +302,7 @@ function addLevelBoxes(levelData : Array<string>, world:any) : void
 	var line : string = levelData[l];
 	for (var x =0;x<line.length;x++) {
 	    if(line[x] == '#') {
-		createBox(world, x*64+32, l*64+32, 32, 32, true);
+		createBox(world, x*gridSize+24, l*gridSize+24, 24, 24, true);
 	    }
 	}
     }
@@ -334,7 +341,6 @@ function resetLevel(): void
 {
     world = createWorld();
     initWorld(world);
-    par = 3;
 }
 
 function firstTimeInit(): void
@@ -342,7 +348,7 @@ function firstTimeInit(): void
     ballStartPos = new b2Vec2(320,96);
     playerImage = getImage("ball");
     images = new Array();
-    imagelist = [ "floor", "arrow", "bitfont", "recharger", "recharger-lit", "wall" ];
+    imagelist = [ "floor", "arrow", "bitfont", "recharger", "recharger-lit", "wall", "sidebar" ];
     for(var i=0;i<imagelist.length;i++) {
 	images[imagelist[i]] = getImage(imagelist[i]);
     }
