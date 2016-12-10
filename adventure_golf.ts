@@ -26,6 +26,7 @@ var images : Array<any>;
 var launchPower: number;
 var saveRoom;
 var gridSize = 48;
+var currentTile = "";
 
 function getImage(name)
 {
@@ -76,6 +77,8 @@ function drawWorld(world, context) {
 		} else {
 		    imageName = "recharger";
 		}
+	    } else if(line[x] == 'v') {
+		imageName = "slope_south";
 	    } else {
 		imageName = "floor";
 	    }
@@ -88,7 +91,6 @@ function drawWorld(world, context) {
 
 
     if(ball.IsSleeping()) {
-
 	context.save();
 	context.translate(pos.x, pos.y);
 	context.rotate(radians(direction));
@@ -123,7 +125,7 @@ function drawWorld(world, context) {
 	}
 	context.stroke();
     }
-
+    drawString(context, currentLevelName, 8, 576);
 }
 
 function createBox(world, x, y, width, height, fixed = false) {
@@ -242,10 +244,12 @@ function checkStopped()
 {
     var vel = ball.GetLinearVelocity();
     var speed = vel.x*vel.x + vel.y*vel.y;
-    if(speed < 5) {
+    if(speed < 500 && currentTile != "v") {
 	ball.SetLinearVelocity(new b2Vec2(0,0));
 	ball.SetAngularVelocity(0);
 	console.log("Detected stopped ball");
+	// Cheekily put the sleeping flag on this object
+	ball.m_flags |= b2Body.e_sleepFlag;
     }
 }
 
@@ -254,11 +258,15 @@ function checkTile()
     var pos = ball.GetCenterPosition();
     var x = Math.floor(pos.x/gridSize);
     var y = Math.floor(pos.y/gridSize);
+    currentTile = levelData[y][x];
     if (levelData[y][x] == "@") {
 	console.log("Passing over regenerator tile!");
 	saveRoom = currentLevelName;
-	if(par<3) par = 3;
+	if(par<5) par = 5;
+    } else if (levelData[y][x] == "v") {
+	ball.ApplyForce( new b2Vec2(0,500000), ball.GetCenterPosition() );
     }
+
 }
 function step(cnt) {
     var stepping = false;
@@ -348,12 +356,12 @@ function firstTimeInit(): void
     ballStartPos = new b2Vec2(320,96);
     playerImage = getImage("ball");
     images = new Array();
-    imagelist = [ "floor", "arrow", "bitfont", "recharger", "recharger-lit", "wall", "sidebar" ];
+    imagelist = [ "floor", "arrow", "bitfont", "recharger", "recharger-lit", "wall", "sidebar", "slope_south" ];
     for(var i=0;i<imagelist.length;i++) {
 	images[imagelist[i]] = getImage(imagelist[i]);
     }
     launchPower = 0;
-    par = 3;
+    par = 5;
     saveRoom = "Entryway";
 }
 
