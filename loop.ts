@@ -12,7 +12,10 @@ var ballRadius = 32;
 var bitfont;
 var titlectx;
 var titleBitmap;
+var winBitmap;
+var winctx;
 var fragments : Array<TaggedPoly>;
+var playerImage;
 
 var levelData: Array<string>;
 
@@ -87,11 +90,11 @@ class Polygon {
 function loadPolygon(line) : Array<Array<number>>
 {
     poly = new Polygon();
-    scale = 0.5;
-    pointArray = line.split(" ");
+    var scale = 0.5;
+    var pointArray : array<String> = line.split(" ");
     for(var p=0;p < pointArray.length;p++) {
 	point = pointArray[p];
-	xy = point.split(",");
+	var xy : array<string> = point.split(",");
 	// polygons are specified on a 1-1000 scale.
 	poly.points.push([(xy[0]-500)*scale+320, xy[1]*scale]); 
     }
@@ -104,10 +107,10 @@ function loadFragments()
 
     totalFragments = 0;
 
-    lineArray = [ "200,50 0,500 30,700 800,800 985,400 815,20" ];
+    var lineArray = [ "200,50 0,500 30,700 800,800 985,400 815,20" ];
     
     for(var l = 0;l< lineArray.length; l++) {
-	line = lineArray[l];
+	var line : string = lineArray[l];
 	var poly : Polygon = loadPolygon(line);
 	fragments.push(new TaggedPoly("outline"+l, poly.points, null));
     }
@@ -124,7 +127,7 @@ function loadFragments()
     levelData.push("########");
 
     for(var l = 0;l< levelData.length; l++) {
-	line = levelData[l];
+	var line : string = levelData[l];
 	for (var x =0;x<line.length;x++) {
 	    if(line[x] == '#') {
 		poly = loadPolygon("0,0 128,0 128,128 0,128, 0,0");
@@ -156,11 +159,11 @@ function drawPolygons()
     ctx.fillStyle = 'white';
     ctx.beginPath();
     ctx.strokeWidth=4;
-    for(f=0;f<fragments.length;f++) {
-	poly = fragments[f].poly;
+    for(var f=0;f<fragments.length;f++) {
+	var poly = fragments[f].poly;
 	ctx.moveTo(poly[0][0], poly[0][1]);
-	for(p=1;p<poly.length;p++) {
-	    point = poly[p];
+	for(var p=1;p<poly.length;p++) {
+	    var point = poly[p];
 	    ctx.lineTo(point[0], point[1]);
 	}
     }
@@ -214,31 +217,31 @@ function animate()
     if(y > SCREENHEIGHT || y<0) { dy = -dy; if(gameOverTimeout==0) wallSound.play(); }
 
     var ball = { 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'radius': ballRadius };
-    collisions = new Array();
-    closest = null;
-    lastCollisionObjectID = null;
+    var collisions : Array<Collision> = new Array();
+    var closest : Collision = null;
+    var lastCollisionObjectID : string = null;
     {
-	for(f=0;f<fragments.length;f++) {
+	for(var f=0;f<fragments.length;f++) {
 	    var poly : TaggedPoly = fragments[f];
 	    lastCollisionObjectID = "";
 	    intersectPoly(poly, collisions, ball, 1, lastCollisionObjectID);
 	}
 	
 	var points : Array<TaggedPoint> = new Array();
-	for(f=0;f<fragments.length;f++) {
+	for(var f=0;f<fragments.length;f++) {
 	    var poly : TaggedPoly = fragments[f];
 	    if(poly.alive == false) continue;
-	    for(p=0;p<poly.poly.length;p++) {
+	    for(var p=0;p<poly.poly.length;p++) {
 		points.push(new TaggedPoint(poly.poly[p], poly, p));
 	    }	
 	}
 
 	// This populates "collisions"
 	intersectVertices(points, collisions, ball.x,ball.y,ball.dx,ball.dy, ball.radius,lastCollisionObjectID);
-	closestDist = 1.1;
+	var closestDist : number = 1.1;
 	
-	for(c=0;c<collisions.length;c++) {
-	    col = collisions[c]; // At some point collisions[c] was undefined
+	for(var c=0;c<collisions.length;c++) {
+	    var col : Collision = collisions[c]; // At some point collisions[c] was undefined
 	    console.log(col.ix, col.iy, col.dist, col.outAngle);
 	    if(col.dist < closestDist) {
 		closest = col;
@@ -253,7 +256,7 @@ function animate()
 	ctx.moveTo(x,y);
 	x = closest.ix;
         y = closest.iy;
-        dist = lineLen(dx,dy)*0.9;
+        var dist = lineLen(dx,dy)*0.9;
         dx = dist*Math.cos(closest.outAngle);
         dy = dist*Math.sin(closest.outAngle);
 	console.log("Moving to "+x+","+y+" with vel "+dx+","+dy+"; dist = "+dist);
