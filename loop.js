@@ -8,7 +8,7 @@ var MODE_TITLE = 0;
 var MODE_PLAY  = 1;
 var MODE_WIN   = 2;
 
-var x = 0, y = 0, dx = 1, dy=1;
+var x = 0, y = 0, dx = 4, dy=4;
 var ballRadius = 32;
 function getImage(name)
 {
@@ -104,7 +104,7 @@ function loadFragments()
 function init()
 {
     mode = MODE_TITLE;
-    playerImage = getImage("player");
+    playerImage = getImage("ball");
     springSound = new Audio("audio/boing.wav");
     makeTitleBitmaps();
     nextRoom();
@@ -145,7 +145,7 @@ function draw() {
     }
 
     drawOutline();
-    ctx.drawImage(playerImage, x, y);
+    ctx.drawImage(playerImage, x-32, y-32);
 
     if(mode == MODE_WIN) {
 	ctx.drawImage(winBitmap, 0, 0);
