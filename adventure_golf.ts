@@ -21,7 +21,7 @@ var levelData;
 var SCREENWIDTH = 640;
 var SCREENHEIGHT = 480;
 var currentLevelName = "Entryway";
-
+var par;
 var images : Array<any>;
 var launchPower: number;
 
@@ -40,6 +40,22 @@ class Pos {
 
 function radians(r) {
     return r*(Math.PI/180);
+}
+
+function drawChar(context, c, x, y) 
+{
+    c = c.charCodeAt(0);
+    if(c > 0) {
+        context.drawImage(images["bitfont"], c*6, 0, 6,8, x, y, 12, 16);
+    }
+}
+
+function drawString(context, string, x, y) {
+    string = string.toUpperCase();
+    for(var i = 0; i < string.length; i++) {
+	drawChar(context, string[i], x, y);
+	x += 12;
+    }
 }
 
 function drawWorld(world, context) {
@@ -93,7 +109,8 @@ function drawWorld(world, context) {
 	context.stroke();
 	context.lineWidth = 1;
     }
-    context.stroke();
+
+    drawString(context, "P.A.R. "+par, 512+8, 8);
 }
 
 function createBox(world, x, y, width, height, fixed = false) {
@@ -175,6 +192,7 @@ function processKeys() {
 	    ball.ApplyImpulse( new b2Vec2(power*Math.cos(radians(direction)), power*Math.sin(radians(direction))), ball.GetCenterPosition() );
 	}
 	launchPower = 0;
+	par -= 1;
     }
 
 }
@@ -298,6 +316,7 @@ function resetLevel(): void
 {
     world = createWorld();
     initWorld(world);
+    par = 3;
 }
 
 function firstTimeInit(): void
@@ -308,7 +327,9 @@ function firstTimeInit(): void
     images["wall"] = getImage("wall");
     images["floor"] = getImage("floor");
     images["arrow"] = getImage("arrow");
+    images["bitfont"] = getImage("bitfont");
     launchPower = 0;
+    par = 3;
 }
 
 var world;
