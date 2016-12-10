@@ -8,7 +8,7 @@ var MODE_TITLE = 0;
 var MODE_PLAY  = 1;
 var MODE_WIN   = 2;
 
-var x = 0, y = 0, dx = 4, dy=4;
+var x = 0, y = 0, dx = 3, dy=4;
 var ballRadius = 32;
 function getImage(name)
 {
