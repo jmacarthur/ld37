@@ -69,7 +69,11 @@ function drawWorld(world, context) {
 	    if(line[x] == '#') {
 		context.drawImage(images["wall"], x*64, l*64);
 	    } else if(line[x] == '@') {
-		context.drawImage(images["recharger"], x*64, l*64);
+		if(currentLevelName == saveRoom) {
+		    context.drawImage(images["recharger-lit"], x*64, l*64);
+		} else {
+		    context.drawImage(images["recharger"], x*64, l*64);
+		}
 	    } else {
 		context.drawImage(images["floor"], x*64, l*64);
 	    }
@@ -246,6 +250,7 @@ function checkTile()
     var y = Math.floor(pos.y/64);
     if (levelData[y][x] == "@") {
 	console.log("Passing over regenerator tile!");
+	saveRoom = currentLevelName;
     }
 }
 function step(cnt) {
@@ -337,11 +342,10 @@ function firstTimeInit(): void
     ballStartPos = new b2Vec2(320,96);
     playerImage = getImage("ball");
     images = new Array();
-    images["wall"] = getImage("wall");
-    images["floor"] = getImage("floor");
-    images["arrow"] = getImage("arrow");
-    images["bitfont"] = getImage("bitfont");
-    images["recharger"] = getImage("recharger");
+    imagelist = [ "floor", "arrow", "bitfont", "recharger", "recharger-lit", "wall" ];
+    for(var i=0;i<imagelist.length;i++) {
+	images[imagelist[i]] = getImage(imagelist[i]);
+    }
     launchPower = 0;
     par = 3;
     saveRoom = "Entryway";
