@@ -41,29 +41,6 @@ function drawShape(shape, context) {
 	context.beginPath();
 	switch (shape.m_type) {
 	case b2Shape.e_circleShape:
-		{
-			var circle = shape;
-			var pos = circle.m_position;
-			var r = circle.m_radius;
-			var segments = 16.0;
-			var theta = 0.0;
-			var dtheta = 2.0 * Math.PI / segments;
-			// draw circle
-			context.moveTo(pos.x + r, pos.y);
-			for (var i = 0; i < segments; i++) {
-				var d = new b2Vec2(r * Math.cos(theta), r * Math.sin(theta));
-				var v = b2Math.AddVV(pos, d);
-				context.lineTo(v.x, v.y);
-				theta += dtheta;
-			}
-			context.lineTo(pos.x + r, pos.y);
-	
-			// draw radius
-			context.moveTo(pos.x, pos.y);
-			var ax = circle.m_R.col1;
-			var pos2 = new b2Vec2(pos.x + r * ax.x, pos.y + r * ax.y);
-			context.lineTo(pos2.x, pos2.y);
-		}
 		break;
 	case b2Shape.e_polyShape:
 		{

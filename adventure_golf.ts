@@ -21,6 +21,7 @@ var levelData;
 var SCREENWIDTH = 640;
 var SCREENHEIGHT = 480;
 var currentLevelName = "Entryway";
+var wallImage;
 
 function getImage(name)
 {
@@ -40,7 +41,7 @@ function radians(r) {
 }
 
 function drawWorld(world, context) {
-    ctx.fillStyle = "#000000";
+    ctx.fillStyle = "#7f7f7f";
     ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
 
     for (var b = world.m_bodyList; b; b = b.m_next) {
@@ -55,17 +56,14 @@ function drawWorld(world, context) {
     context.lineTo(pos.x + 64*Math.cos(radians(direction)), pos.y+64*Math.sin(radians(direction)));
     context.stroke();
 
-    context.fillStyle = 'white';
     for(var l = 0;l< levelData.length; l++) {
 	var line : string = levelData[l];
 	for (var x =0;x<line.length;x++) {
 	    if(line[x] == '#') {
-		context.rect(x*64, l*64, 64, 64);
-		context.fill();
+		context.drawImage(wallImage, x*64, l*64);
 	    }
 	}
     }
-
 }
 
 function createBox(world, x, y, width, height, fixed = false) {
@@ -261,6 +259,7 @@ window.onload=function() {
     world = createWorld();
     initWorld(world);
     playerImage = getImage("ball");
+    wallImage = getImage("wall");
     ctx = $('canvas').getContext('2d');
     var canvasElm = $('canvas');
     canvasWidth = parseInt(canvasElm.width);
