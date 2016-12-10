@@ -8,6 +8,8 @@ var MODE_TITLE = 0;
 var MODE_PLAY  = 1;
 var MODE_WIN   = 2;
 
+var x = 0, y = 0, dx = 1, dy=1;
+var ballRadius = 32;
 function getImage(name)
 {
     image = new Image();
@@ -58,13 +60,59 @@ function resetGame()
     y = 128;
 }
 
+function loadPolygon(line)
+{
+    poly = new Array();
+    scale = 0.5;
+    pointArray = line.split(" ");
+    for(var p=0;p < pointArray.length;p++) {
+	point = pointArray[p];
+	xy = point.split(",");
+	// polygons are specified on a 1-1000 scale.
+	poly.push([(xy[0]-500)*scale+320, xy[1]*scale]); 
+    }
+    return poly;
+}
+
+function TaggedPoly(ident, pointarray, region) {
+    this.poly = pointarray;
+    this.region = region;
+    this.ident = ident;
+    this.alive = true;
+}
+
+function loadFragments()
+{
+    fragments = new Array();
+    outline = new Array();
+    colours = new Array();
+    borderColours = new Array();
+
+    totalFragments = 0;
+
+    lineArray = [ "171.445210,58.112124 0.035655,229.521680 471.411930,700.897960 985.640600,229.521680 814.231040,58.112124" ];
+    
+    for(var l = 0;l< lineArray.length; l++) {
+	line = lineArray[l];
+	poly = loadPolygon(line);
+	outline.push(new TaggedPoly("outline"+l, poly, null));
+    }
+}
+
+
 function init()
 {
     mode = MODE_TITLE;
     playerImage = getImage("player");
     springSound = new Audio("audio/boing.wav");
     makeTitleBitmaps();
+    nextRoom();
     return true;
+}
+
+function nextRoom()
+{
+    loadFragments();
 }
 
 function draw() {
@@ -250,9 +298,83 @@ function intersectVertices(points, collisions, ballx,bally,ballxv,ballyv, ballRa
     }
 }
 
+function animate()
+{
+    if(x > SCREENWIDTH || x<0) { dx = -dx; wallSound.play(); }
+    if(y > SCREENHEIGHT || y<0) { dy = -dy; if(gameOverTimeout==0) wallSound.play(); }
+
+    var ball = { 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'radius': ballRadius };
+    collisions = new Array();
+    closest = null;
+    lastCollisionObjectID = null;
+    {
+	for(f=0;f<fragments.length;f++) {
+	    poly = fragments[f];
+	    lastCollisionObjectID = "";
+	    intersectPoly(poly, collisions, ball, 1, lastCollisionObjectID);
+	}
+	
+	points = new Array();
+	for(f=0;f<fragments.length;f++) {
+	    poly = fragments[f];
+	    if(poly.alive == false) continue;
+	    for(p=0;p<poly.poly.length;p++) {
+		points.push(new TaggedPoint(poly.poly[p], poly, p));
+	    }	
+	}
+	
+	intersectVertices(points, collisions, ball.x,ball.y,ball.dx,ball.dy, ball.radius,lastCollisionObjectID)
+	closestDist = 1.1;
+	
+	for(c=0;c<collisions.length;c++) {
+	    col = collisions[c];
+	    console.log(col.ix, col.iy, col.dist, col.outAngle);
+	    if(col.dist < closestDist) {
+		closest = col;
+		closestDist = col.dist;
+	    }
+	}
+    }
+    
+    if(closest != null) {
+        console.log("Identified collision as "+closest.obj.ident+" at dist "+closestDist);
+	ctx.beginPath();
+	ctx.moveTo(x,y);
+	x = closest.ix;
+        y = closest.iy;
+        dist = lineLen(dx,dy);
+        dx = dist*Math.cos(closest.outAngle);
+        dy = dist*Math.sin(closest.outAngle);
+	console.log("Moving to "+x+","+y+" with vel "+dx+","+dy);
+	// TODO: At the moment we only do one collision per check - we could get into trouble this way...
+	ctx.lineTo(x,y);
+	ctx.stroke();
+	if (shattered) {
+	    closest.obj.alive = false;
+
+	    score += 2;
+	    totalFragments -= 1;
+	    if(totalFragments <= 1) {
+		// For some reason we always have 1 fragment left when the game's finished...
+		winTimeout = 100;
+		winSound.play();
+	    }
+	    smashNoise[2+randint(3)].play();
+	    console.log("Fragments remaining: "+totalFragments);
+	} else {
+	    shattered = true;
+	    smashNoise[randint(2)].play();
+	    }
+    } else {
+	x += dx;
+	y += dy;
+    }
+}
+
 function drawRepeat() {
     if(mode != MODE_TITLE) {
 	processKeys();
+	animate();
     }
     draw();
     if(!stopRunloop) setTimeout('drawRepeat()',20);
