@@ -187,7 +187,7 @@ if (canvas.getContext('2d')) {
 	}
 	if(c == 32) {
 	    // Impulse is divided by mass, so needs to be large.
-	    var power = 500000;
+	    var power = 5000000;
 	    ball.ApplyImpulse( new b2Vec2(power*Math.cos(radians(direction)), power*Math.sin(radians(direction))), ball.GetCenterPosition() );
 	}
 	if(c == 78) {
