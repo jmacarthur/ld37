@@ -10,7 +10,9 @@ var b2BoxDef;
 var b2AABB;
 var b2Vec2;
 var b2World;
-
+var ball;
+var ballBd;
+var ballShape;
 
 class Pos {
     x: number;
@@ -29,12 +31,12 @@ function createBox(world, x, y, width, height, fixed = false) {
 }
 
 function createBall(world, x, y, rad, fixed = false, density = 1.0) {
-    var ballSd = new b2CircleDef();
-    if (!fixed) ballSd.density = density;
-    ballSd.radius = rad || 10;
-    ballSd.restitution = 0.2;
-    var ballBd = new b2BodyDef();
-    ballBd.AddShape(ballSd);
+    ballShape = new b2CircleDef();
+    if (!fixed) ballShape.density = density;
+    ballShape.radius = rad || 10;
+    ballShape.restitution = 0.2;
+    ballBd = new b2BodyDef();
+    ballBd.AddShape(ballShape);
     ballBd.position.Set(x,y);
     return world.CreateBody(ballBd);
 };
@@ -100,12 +102,10 @@ if (canvas.getContext('2d')) {
 	    console.log("Quit!");
 	}
 	if(c == 32) {
-	    if (Math.random() < 0.5) 
-		createBall(world, 390, 10, 10, false, 1.0);
-	    else 
-		createBall(world, 390, 10, 20, false);
+	    // Impulse is divided by mass, so needs to be large.
+	    ball.ApplyImpulse( new b2Vec2(0,500000), ball.GetCenterPosition() );
 	}
-
+	
     }
     body.onkeyup = function (event) {
 	var c = event.keyCode;
@@ -117,16 +117,16 @@ function createWorld() {
     var worldAABB = new b2AABB();
     worldAABB.minVertex.Set(-1000, -1000);
     worldAABB.maxVertex.Set(1000, 1000);
-    var gravity = new b2Vec2(0, 300);
+    var gravity = new b2Vec2(0, 1);
     var doSleep = true;
     var world = new b2World(worldAABB, gravity, doSleep);
 
     var levelData = new Array();
-    levelData.push("########");
+    levelData.push("####E###");
     levelData.push("#......#");
-    levelData.push("#.c....#");
+    levelData.push("#.s....#");
     levelData.push("#......#");
-    levelData.push("#......#");
+    levelData.push("#......E");
     levelData.push("#.#..#.#");
     levelData.push("#......#");
     levelData.push("########");
@@ -141,6 +141,9 @@ function createWorld() {
     }
 
     createGround(world);
+
+    ball = createBall(world, 390, 96, 20, false, 1.0);
+
     return world;
 }
 
