@@ -19,22 +19,36 @@ function lineLen(x,y)
     return Math.sqrt(x*x+y*y);
 }
 
-function TaggedPoint(coords, polygon, pointid)
-{
-    this.x1 = coords[0];
-    this.y1 = coords[1];
-    this.ident = polygon.ident+"-"+pointid;
-    this.polygon = polygon
+class TaggedPoint {
+    x1: number;
+    y1: number;
+    ident: string;
+    polygon: any;
+    constructor(coords, polygon, pointid) {
+	this.x1 = coords[0];
+	this.y1 = coords[1];
+	this.ident = polygon.ident+"-"+pointid;
+	this.polygon = polygon
+    }
 }
 
 
-function TaggedLine(x1, y1, x2, y2, polygon, lineid){
-    this.x1 = x1;
-    this.x2 = x2;
-    this.y1 = y1;
-    this.y2 = y2;
-    this.polygon = polygon;
-    this.ident = polygon.ident+"-l"+lineid;
+class TaggedLine {
+    x1: number;
+    x2: number;
+    y1: number;
+    y2: number;
+    polygon: TaggedPolygon;
+    ident: string;
+    
+    constructor(x1, y1, x2, y2, polygon, lineid) {
+	this.x1 = x1;
+	this.x2 = x2;
+	this.y1 = y1;
+	this.y2 = y2;
+	this.polygon = polygon;
+	this.ident = polygon.ident+"-l"+lineid;
+    }
 }
 
 function TaggedPoly(ident, pointarray, region) {
@@ -44,9 +58,9 @@ function TaggedPoly(ident, pointarray, region) {
     this.alive = true;
 }
 
-function getTaggedPolyLines(taggedPolygon)
+function getTaggedPolyLines(taggedPolygon) : Array<TaggedLine>
 {
-    lines = new Array();
+    var lines: Array<TaggedLine> = new Array();
     poly = taggedPolygon.poly;
     for(p=0;p<poly.length-1;p++) {
         lines.push(new TaggedLine(poly[p][0],poly[p][1],poly[p+1][0],poly[p+1][1],taggedPolygon,p));
@@ -67,7 +81,7 @@ function Collision(ix,iy,dist,outAngle,obj)
 function intersectPoly(poly, collisions, ball, considerRadius, lastCollisionObjectID)
 {
     lines = getTaggedPolyLines(poly);
-    hitline = null;
+    var hitline = null;
     lowi = 1.1;
 
     for(ln=0;ln<lines.length;ln++) {
@@ -132,11 +146,10 @@ function intersectPoly(poly, collisions, ball, considerRadius, lastCollisionObje
         ballToIntersectY /= distToIntersect;
         angle = Math.acos(ballToIntersectX*lnormx+ballToIntersectY*lnormy);
         console.log("Collision is at "+degrees(angle)+" degrees to surface normal");
-        normAngle = Math.atan2(lnormy,lnormx)+Math.PI;
-        incident = Math.atan2(ball.dy,ball.dx)+Math.PI;
-        angle =  incident - normAngle;
-        
-        outangle = normAngle - angle;
+        var normAngle = Math.atan2(lnormy,lnormx)+Math.PI;
+        var incident = Math.atan2(ball.dy,ball.dx)+Math.PI;
+        var angle =  incident - normAngle;
+        var outangle = normAngle - angle;
 	
         //if(poly.region.collide == False) {
         //    outangle = incident - Math.PI;
@@ -146,40 +159,43 @@ function intersectPoly(poly, collisions, ball, considerRadius, lastCollisionObje
     }
 }
 
-function checkClosestApproach(point, startx, starty, dx, dy)
+function checkClosestApproach(point: TaggedPoint, startx: number, starty: number, dx: number, dy: number)
 {
-    normx = -dy;
-    normy = dx;
-    res = lineIntersection(startx,starty,dx,dy,
+    var normx = -dy;
+    var normy = dx;
+    var res = lineIntersection(startx,starty,dx,dy,
                              point.x1,point.y1,normx,normy);
-    i = res[0]; j = res[1];
-    dist = Math.abs(j*lineLen(normx,normy));
+    var i = res[0];
+    var j = res[1];
+    var dist = Math.abs(j*lineLen(normx,normy));
     return [dist,i];
 }
-function intersectVertices(points, collisions, ballx,bally,ballxv,ballyv, ballRadius,lastCollisionObjectID)
-{
-    for(pointindex=0;pointindex<points.length;pointindex++) {
-	p = points[pointindex];
-        if(p.ident == lastCollisionObjectID) continue;
-        res = checkClosestApproach(p,ballx,bally,ballxv,ballyv);
 
-	d = res[0]; i = res[1];
+function intersectVertices(points, collisions, ballx,bally,ballxv,ballyv, ballRadius,lastCollisionObjectID) : void
+{
+    for(var pointindex=0;pointindex<points.length;pointindex++) {
+	var p : TaggedPoint = points[pointindex];
+        if(p.ident == lastCollisionObjectID) continue;
+        var res = checkClosestApproach(p,ballx,bally,ballxv,ballyv);
+
+	var d = res[0];
+	var i = res[1];
         if(d<ballRadius) {
-            diff = ballRadius - d;
-            dist = Math.sqrt(ballRadius*ballRadius-d*d);
-            iPoint = (lineLen(ballxv,ballyv)*i-dist)/lineLen(ballxv,ballyv); // Distance to intersect
+            var diff = ballRadius - d;
+            var dist = Math.sqrt(ballRadius*ballRadius-d*d);
+            var iPoint : number = (lineLen(ballxv,ballyv)*i-dist)/lineLen(ballxv,ballyv); // Distance to intersect
             if(iPoint >=0 && iPoint <=1) {
-                ix = ballx+ballxv*iPoint;
-                iy = bally+ballyv*iPoint;
-                radiusAng = Math.atan2(iy-p.y1,ix-p.x1);
-                incident = Math.atan2(ballyv,ballxv)+Math.PI;
-                angle =  incident - radiusAng;
+                var ix : number = ballx+ballxv*iPoint;
+                var iy : number = bally+ballyv*iPoint;
+                var radiusAng = Math.atan2(iy-p.y1,ix-p.x1);
+                var incident = Math.atan2(ballyv,ballxv)+Math.PI;
+                var angle =  incident - radiusAng;
                 console.log("Collides with ident "+p.ident+" Incident angle = "+degrees(incident));
                 console.log("Surface normal angle = "+degrees(radiusAng));
-                outangle = radiusAng - angle;
+                var outangle = radiusAng - angle;
 		// Horrible way to get the polygon of this point by parsing the ident...
-		split = p.ident.indexOf("-");
-		polyNum = p.ident.slice(4,split);
+		var split = p.ident.indexOf("-");
+		var polyNum = p.ident.slice(4,split);
                 collisions.push(new Collision(ix,iy, iPoint, outangle, fragments[polyNum]))
 	    }
 	}

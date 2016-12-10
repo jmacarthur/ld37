@@ -134,7 +134,7 @@ function loadFragments()
 }
 
 
-function init()
+function init() : boolean
 {
     mode = MODE_TITLE;
     playerImage = getImage("ball");
