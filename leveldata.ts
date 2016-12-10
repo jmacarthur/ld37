@@ -9,6 +9,7 @@ var levels = {
 		 "#......#",
 		 "########"],
 	"n_to": "Kitchen",
+	"e_to": "Vehicle maintenance",
     },
     "Kitchen": {
 	"map": [ "########",
@@ -20,5 +21,28 @@ var levels = {
 		 "#......#",
 		 "####E###"],
 	"s_to": "Entryway",
+    },
+    "Vehicle maintenance": {
+	"map": [ "##EE####",
+		 "#... .##",
+		 "#......#",
+		 "####...#",
+		 "E .##..#",
+		 "#. .. .#",
+		 "#......#",
+		 "########"],
+	"w_to": "Entryway",
+	"n_to": "Service entrance",
+    },
+    "Service entrance": {
+	"map": [ "########",
+		 "#... . #",
+		 "#......#",
+		 "#  ##..#",
+		 "# .##..#",
+		 "#. .. .#",
+		 "#......#",
+		 "##EE####"],
+	"s_to": "Vehicle maintenance"
     }
 };

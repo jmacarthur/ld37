@@ -40,7 +40,7 @@ function radians(r) {
 }
 
 function drawWorld(world, context) {
-    ctx.fillStyle = "#0000c0";
+    ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
 
     for (var b = world.m_bodyList; b; b = b.m_next) {
@@ -115,7 +115,7 @@ function pin(body1, body2, pos : Pos)
 function initWorld(world) {
     var pendulum = createBox(world, 150, 160, 20, 20, false);
     pin (pendulum, world.GetGroundBody(), pendulum.GetCenterPosition());
-    var gradient = createPoly(world, 200, 200, [[0, 0], [200, -30], [200, 30]], true);
+    //var gradient = createPoly(world, 200, 200, [[0, 0], [200, -30], [200, 30]], true);
 };
 
 var initId = 0;
@@ -146,7 +146,7 @@ function changeScreens() {
 	return;
     }
     if(pos.x>512 && levels[currentLevelName].e_to !== undefined) {
-	ballStartPos = new b2Vec2(32+8,pos.y);
+	ballStartPos = new b2Vec2(64+8,pos.y);
 	currentLevelName = levels[currentLevelName].e_to;
 	resetLevel();
 	return;
