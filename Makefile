@@ -1,2 +1,2 @@
-loop.js: loop.ts
-	tsc loop.ts
+loop.js: loop.ts physics.ts
+	tsc --outFile loop.js loop.ts physics.ts
