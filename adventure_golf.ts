@@ -24,6 +24,7 @@ var currentLevelName = "Entryway";
 var par;
 var images : Array<any>;
 var launchPower: number;
+var saveRoom;
 
 function getImage(name)
 {
@@ -67,6 +68,8 @@ function drawWorld(world, context) {
 	for (var x =0;x<line.length;x++) {
 	    if(line[x] == '#') {
 		context.drawImage(images["wall"], x*64, l*64);
+	    } else if(line[x] == '@') {
+		context.drawImage(images["recharger"], x*64, l*64);
 	    } else {
 		context.drawImage(images["floor"], x*64, l*64);
 	    }
@@ -161,8 +164,8 @@ function pin(body1, body2, pos : Pos)
 }
 
 function initWorld(world) {
-    var pendulum = createBox(world, 150, 160, 20, 20, false);
-    pin (pendulum, world.GetGroundBody(), pendulum.GetCenterPosition());
+    //var pendulum = createBox(world, 150, 160, 20, 20, false);
+    //pin (pendulum, world.GetGroundBody(), pendulum.GetCenterPosition());
     //var gradient = createPoly(world, 200, 200, [[0, 0], [200, -30], [200, 30]], true);
 };
 
@@ -236,6 +239,15 @@ function checkStopped()
     }
 }
 
+function checkTile()
+{
+    var pos = ball.GetCenterPosition();
+    var x = Math.floor(pos.x/64);
+    var y = Math.floor(pos.y/64);
+    if (levelData[y][x] == "@") {
+	console.log("Passing over regenerator tile!");
+    }
+}
 function step(cnt) {
     var stepping = false;
     var timeStep = 1.0/60;
@@ -246,6 +258,7 @@ function step(cnt) {
     processKeys();
     changeScreens();
     checkStopped();
+    checkTile();
     setTimeout('step(' + (cnt || 0) + ')', 10);
 }
 
@@ -328,8 +341,10 @@ function firstTimeInit(): void
     images["floor"] = getImage("floor");
     images["arrow"] = getImage("arrow");
     images["bitfont"] = getImage("bitfont");
+    images["recharger"] = getImage("recharger");
     launchPower = 0;
     par = 3;
+    saveRoom = "Entryway";
 }
 
 var world;
