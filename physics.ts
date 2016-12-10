@@ -207,11 +207,7 @@ function intersectVertices(points : Array<TaggedPoint>, collisions: Array<Collis
                 console.log("Collides with ident "+p.ident+" Incident angle = "+degrees(incident));
                 console.log("Surface normal angle = "+degrees(radiusAng));
                 var outangle = radiusAng - angle;
-		// Horrible way to get the polygon of this point by parsing the ident...
-		var split = p.ident.indexOf("-");
-		var polyNum = p.ident.slice(4,split);
-		console.log("Adding collision with fragment "+polyNum+" ("+p.ident+"): "+fragments[polyNum]+" to list");
-                collisions.push(new Collision(ix,iy, iPoint, outangle, fragments[polyNum]))
+                collisions.push(new Collision(ix,iy, iPoint, outangle, p.polygon))
 	    }
 	}
     }

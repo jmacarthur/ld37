@@ -127,7 +127,7 @@ function loadFragments()
 	line = levelData[l];
 	for (var x =0;x<line.length;x++) {
 	    if(line[x] == '#') {
-		poly = loadPolygon("0,0 128,0 128,128 0,128");
+		poly = loadPolygon("0,0 128,0 128,128 0,128, 0,0");
 		poly.translate(x*64, l*64);
 		fragments.push(new TaggedPoly("wall"+l+x, poly.points, null));
 	    }
