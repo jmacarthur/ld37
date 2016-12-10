@@ -90,7 +90,7 @@ function loadFragments()
 
     totalFragments = 0;
 
-    lineArray = [ "171.445210,58.112124 0.035655,229.521680 471.411930,700.897960 985.640600,229.521680 814.231040,58.112124" ];
+    lineArray = [ "200,50 0,500 450,700 985,400 815,20" ];
     
     for(var l = 0;l< lineArray.length; l++) {
 	line = lineArray[l];
@@ -407,10 +407,10 @@ function animate()
 	ctx.moveTo(x,y);
 	x = closest.ix;
         y = closest.iy;
-        dist = lineLen(dx,dy);
+        dist = lineLen(dx,dy)*0.9;
         dx = dist*Math.cos(closest.outAngle);
         dy = dist*Math.sin(closest.outAngle);
-	console.log("Moving to "+x+","+y+" with vel "+dx+","+dy);
+	console.log("Moving to "+x+","+y+" with vel "+dx+","+dy+"; dist = "+dist);
 	// TODO: At the moment we only do one collision per check - we could get into trouble this way...
 	ctx.lineTo(x,y);
 	ctx.stroke();
@@ -422,6 +422,11 @@ function animate()
 	x += dx;
 	y += dy;
     }
+
+    // Gravity field
+    dy += 0.1;
+
+
 }
 
 function drawRepeat() {
