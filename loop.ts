@@ -10,9 +10,14 @@ var MODE_WIN   = 2;
 
 var x = 0, y = 0, dx = 3, dy=4;
 var ballRadius = 32;
+var bitfont;
+var titlectx;
+var titleBitmap;
+var fragments : Array<TaggedPoly>;
+
 function getImage(name)
 {
-    image = new Image();
+    var image = new Image();
     image.src = 'graphics/'+name+'.png';
     return image;
 }
@@ -27,7 +32,7 @@ function drawChar(context, c, x, y)
 
 function drawString(context, string, x, y) {
     string = string.toUpperCase();
-    for(i = 0; i < string.length; i++) {
+    for(var i = 0; i < string.length; i++) {
 	drawChar(context, string[i], x, y);
 	x += 12;
     }
@@ -90,7 +95,7 @@ function loadFragments()
 
     totalFragments = 0;
 
-    lineArray = [ "200,50 0,500 450,700 985,400 815,20" ];
+    lineArray = [ "200,50 0,500 30,700 800,800 985,400 815,20" ];
     
     for(var l = 0;l< lineArray.length; l++) {
 	line = lineArray[l];
