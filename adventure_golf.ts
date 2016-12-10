@@ -1,5 +1,5 @@
 /// <reference path="draw_world.ts" />
-
+/// <reference path="leveldata.ts" />
 
 var b2CircleDef;
 var b2BodyDef;
@@ -175,15 +175,7 @@ function createWorld() {
     var doSleep = true;
     var world = new b2World(worldAABB, gravity, doSleep);
 
-    levelData = new Array();
-    levelData.push("####E###");
-    levelData.push("#......#");
-    levelData.push("#.s....#");
-    levelData.push("#......#");
-    levelData.push("#......E");
-    levelData.push("#.#..#.#");
-    levelData.push("#......#");
-    levelData.push("########");
+    levelData = levels["Entryway"].map;
 
     for(var l = 0;l< levelData.length; l++) {
 	var line : string = levelData[l];
