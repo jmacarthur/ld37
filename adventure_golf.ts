@@ -16,6 +16,17 @@ var ball;
 var ballBd;
 var ballShape;
 var direction : number = 90;
+var playerImage;
+var levelData;
+var SCREENWIDTH = 640;
+var SCREENHEIGHT = 480;
+function getImage(name)
+{
+    var image = new Image();
+    image.src = 'graphics/'+name+'.png';
+    return image;
+}
+
 
 class Pos {
     x: number;
@@ -27,18 +38,32 @@ function radians(r) {
 }
 
 function drawWorld(world, context) {
-	for (var j = world.m_jointList; j; j = j.m_next) {
-		drawJoint(j, context);
+    ctx.fillStyle = "#0000c0";
+    ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
+
+    for (var b = world.m_bodyList; b; b = b.m_next) {
+	for (var s = b.GetShapeList(); s != null; s = s.GetNext()) {
+	    // I don't know why, but if we don't call this, the game slows down enormously
+	    drawShape(s, context);
 	}
-	for (var b = world.m_bodyList; b; b = b.m_next) {
-		for (var s = b.GetShapeList(); s != null; s = s.GetNext()) {
-			drawShape(s, context);
-		}
-	}
+    }
     var pos = ball.GetCenterPosition();
+    context.drawImage(playerImage, pos.x-32, pos.y-32);
     context.moveTo(pos.x, pos.y);
     context.lineTo(pos.x + 64*Math.cos(radians(direction)), pos.y+64*Math.sin(radians(direction)));
     context.stroke();
+
+    context.fillStyle = 'white';
+    for(var l = 0;l< levelData.length; l++) {
+	var line : string = levelData[l];
+	for (var x =0;x<line.length;x++) {
+	    if(line[x] == '#') {
+		context.rect(x*64, l*64, 64, 64);
+		context.fill();
+	    }
+	}
+    }
+
 }
 
 function createBox(world, x, y, width, height, fixed = false) {
@@ -150,7 +175,7 @@ function createWorld() {
     var doSleep = true;
     var world = new b2World(worldAABB, gravity, doSleep);
 
-    var levelData = new Array();
+    levelData = new Array();
     levelData.push("####E###");
     levelData.push("#......#");
     levelData.push("#.s....#");
@@ -171,7 +196,7 @@ function createWorld() {
 
     createGround(world);
 
-    ball = createBall(world, 390, 96, 20, false, 1.0);
+    ball = createBall(world, 390, 96, 32, false, 1.0);
 
     return world;
 }
@@ -185,10 +210,12 @@ function createGround(world) {
     groundBd.position.Set(-500, 900);
     return world.CreateBody(groundBd)
 }
+
 var world;
 window.onload=function() {
     world = createWorld();
     initWorld(world);
+    playerImage = getImage("ball");
     ctx = $('canvas').getContext('2d');
     var canvasElm = $('canvas');
     canvasWidth = parseInt(canvasElm.width);
