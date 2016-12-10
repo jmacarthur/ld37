@@ -7,7 +7,7 @@ var keysDown = new Array();
 var SCREENWIDTH  = 640;
 var SCREENHEIGHT = 480;
 
-var x = 0, y = 0, dx = 3, dy=4;
+var x = 0, y = 0, dx = 6, dy=4;
 var ballRadius = 32;
 var bitfont;
 var titlectx;
@@ -107,13 +107,13 @@ function loadFragments()
 
     totalFragments = 0;
 
-    var lineArray = [ "200,50 0,500 30,700 800,800 985,400 815,20" ];
+    /*var lineArray = [ "200,50 0,500 30,700 800,800 985,400 815,20" ];
     
     for(var l = 0;l< lineArray.length; l++) {
 	var line : string = lineArray[l];
 	var poly : Polygon = loadPolygon(line);
 	fragments.push(new TaggedPoly("outline"+l, poly.points, null));
-    }
+    }*/
 
     // Now load some wall structures
     levelData = new Array();
@@ -130,7 +130,7 @@ function loadFragments()
 	var line : string = levelData[l];
 	for (var x =0;x<line.length;x++) {
 	    if(line[x] == '#') {
-		poly = loadPolygon("0,0 128,0 128,128 0,128, 0,0");
+		poly = loadPolygon("0,0 127,0 127,127 0,127, 0,0");
 		poly.translate(x*64, l*64);
 		fragments.push(new TaggedPoly("wall"+l+x, poly.points, null));
 	    }
@@ -218,64 +218,67 @@ function animate()
 
     var ball = { 'x': x, 'y': y, 'dx': dx, 'dy': dy, 'radius': ballRadius };
     var collisions : Array<Collision> = new Array();
-    var closest : Collision = null;
     var lastCollisionObjectID : string = null;
-    {
-	for(var f=0;f<fragments.length;f++) {
-	    var poly : TaggedPoly = fragments[f];
-	    lastCollisionObjectID = "";
-	    intersectPoly(poly, collisions, ball, 1, lastCollisionObjectID);
-	}
-	
-	var points : Array<TaggedPoint> = new Array();
-	for(var f=0;f<fragments.length;f++) {
-	    var poly : TaggedPoly = fragments[f];
-	    if(poly.alive == false) continue;
-	    for(var p=0;p<poly.poly.length;p++) {
-		points.push(new TaggedPoint(poly.poly[p], poly, p));
-	    }	
-	}
 
-	// This populates "collisions"
-	intersectVertices(points, collisions, ball.x,ball.y,ball.dx,ball.dy, ball.radius,lastCollisionObjectID);
-	var closestDist : number = 1.1;
-	
+    for(var f=0;f<fragments.length;f++) {
+	var poly : TaggedPoly = fragments[f];
+	lastCollisionObjectID = "";
+	intersectPoly(poly, collisions, ball, 1, lastCollisionObjectID);
+    }
+    
+    var points : Array<TaggedPoint> = new Array();
+    for(var f=0;f<fragments.length;f++) {
+	var poly : TaggedPoly = fragments[f];
+	if(poly.alive == false) continue;
+	for(var p=0;p<poly.poly.length;p++) {
+	    points.push(new TaggedPoint(poly.poly[p], poly, p));
+	}	
+    }
+    
+    // This populates "collisions"
+    intersectVertices(points, collisions, ball.x,ball.y,ball.dx,ball.dy, ball.radius,lastCollisionObjectID);
+
+    while(1) {
+	var closestDist : number = 2.0;
+	var closest : Collision = null;
 	for(var c=0;c<collisions.length;c++) {
 	    var col : Collision = collisions[c]; // At some point collisions[c] was undefined
-	    console.log(col.ix, col.iy, col.dist, col.outAngle);
-	    if(col.dist < closestDist) {
-		closest = col;
-		closestDist = col.dist;
+	    if(!col.processed) {
+		console.log(col.ix, col.iy, col.dist, col.outAngle);
+		if(col.dist < closestDist) {
+		    closest = col;
+		    closestDist = col.dist;
+		}
 	    }
+	}
+	
+	if(closest != null) {
+	    closest.processed = true;
+	    console.log("Identified collision as "+closest.obj.ident+" at dist "+closestDist);
+	    ctx.beginPath();
+	    ctx.moveTo(x,y);
+	    x = closest.ix;
+            y = closest.iy;
+            var dist = lineLen(dx,dy)*0.9;
+            dx = dist*Math.cos(closest.outAngle);
+            dy = dist*Math.sin(closest.outAngle);
+	    console.log("Moving to "+x+","+y+" with vel "+dx+","+dy+"; dist = "+dist);
+	    // TODO: At the moment we only do one collision per check - we could get into trouble this way...
+	    ctx.lineTo(x,y);
+	    ctx.stroke();
+	    {
+		closest.obj.alive = false;
+		
+	    } 
+	} else {
+	    x += dx;
+	    y += dy;
+	    // Gravity field
+	    dy += 0.1;
+	    return;
 	}
     }
     
-    if(closest != null) {
-        console.log("Identified collision as "+closest.obj.ident+" at dist "+closestDist);
-	ctx.beginPath();
-	ctx.moveTo(x,y);
-	x = closest.ix;
-        y = closest.iy;
-        var dist = lineLen(dx,dy)*0.9;
-        dx = dist*Math.cos(closest.outAngle);
-        dy = dist*Math.sin(closest.outAngle);
-	console.log("Moving to "+x+","+y+" with vel "+dx+","+dy+"; dist = "+dist);
-	// TODO: At the moment we only do one collision per check - we could get into trouble this way...
-	ctx.lineTo(x,y);
-	ctx.stroke();
-	{
-	    closest.obj.alive = false;
-
-	} 
-    } else {
-	x += dx;
-	y += dy;
-    }
-
-    // Gravity field
-    dy += 0.1;
-
-
 }
 
 function drawRepeat() {

@@ -80,14 +80,16 @@ class Collision {
     iy : number;
     dist: number;
     outAngle: number;
-    obj: number;
-    constructor(ix,iy,dist,outAngle,obj)
+    obj: TaggedPoly;
+    processed : boolean;
+    constructor(ix,iy,dist,outAngle,obj : TaggedPoly)
     {
 	this.ix = ix;
 	this.iy = iy;
 	this.dist = dist;
 	this.outAngle = outAngle;
 	this.obj = obj;
+	this.processed = false;
     }
 }
 
