@@ -20,14 +20,15 @@ var playerImage;
 var levelData;
 var SCREENWIDTH = 640;
 var SCREENHEIGHT = 576;
-var currentLevelName = "Entryway";
+var currentLevelName;
 var par;
 var images : Array<any>;
 var launchPower: number;
 var saveRoom;
 var gridSize = 48;
 var currentTile = "";
-
+var dropping_into_hole = false;
+var ballRadius = 30;
 function getImage(name)
 {
     var image = new Image();
@@ -95,7 +96,15 @@ function drawWorld(world, context) {
     }
 
     var pos = ball.GetCenterPosition();
-    context.drawImage(playerImage, pos.x-32, pos.y-32);
+    if(dropping_into_hole) {
+	context.save();
+	context.translate(pos.x-32, pos.y-32);
+	context.scale(30/ballRadius, 30/ballRadius);
+	context.drawImage(playerImage, 0, 0);
+	context.restore();
+    } else {
+	context.drawImage(playerImage, pos.x-32, pos.y-32);
+    }
 
 
     if(ball.IsSleeping()) {
@@ -106,12 +115,6 @@ function drawWorld(world, context) {
 	context.restore();
     }
 
-    for (var b = world.m_bodyList; b; b = b.m_next) {
-	for (var s = b.GetShapeList(); s != null; s = s.GetNext()) {
-	    // I don't know why, but if we don't call this, the game slows down enormously
-	    drawShape(s, context);
-	}
-    }
     context.drawImage(images["sidebar"], 576,0);
     drawString(context, ""+par, 576+24, 48);
 
@@ -134,6 +137,12 @@ function drawWorld(world, context) {
 	context.stroke();
     }
     drawString(context, currentLevelName, 8, 576);
+    for (var b = world.m_bodyList; b; b = b.m_next) {
+	for (var s = b.GetShapeList(); s != null; s = s.GetNext()) {
+	    // I don't know why, but if we don't call this, the game slows down enormously
+	    drawShape(s, context);
+	}
+    }
 }
 
 function createBox(world, x, y, width, height, fixed = false) {
@@ -149,6 +158,11 @@ function createBox(world, x, y, width, height, fixed = false) {
 
 function createBall(world, x, y, rad, fixed = false, density = 1.0) {
     ballShape = new b2CircleDef();
+    // Fudge this so the density is always the same
+    var actual_mass = rad * rad * Math.PI * density;
+    var ideal_mass = 30*30*Math.PI*density;
+    density = ideal_mass / actual_mass;
+    console.log("Calculating effective density as "+density);
     if (!fixed) ballShape.density = density;
     ballShape.radius = rad || 10;
     ballShape.restitution = 0.9; // How bouncy the ball is
@@ -279,9 +293,56 @@ function checkTile()
 	ball.ApplyForce( new b2Vec2(-500000,0), ball.GetCenterPosition() );
     } else if (levelData[y][x] == ">") {
 	ball.ApplyForce( new b2Vec2(500000,0), ball.GetCenterPosition() );
+    } else if (levelData[y][x] == "o") {
+	if (dropping_into_hole) {
+	    ballRadius += 0.2;
+	    var oldPos = ball.GetCenterPosition();
+	    var oldVel = ball.GetLinearVelocity();
+	    var speed = oldVel.x*oldVel.x+oldVel.y*oldVel.y;
+	    if(speed < 500) {
+		kill_player();
+	    } else {
+		world.DestroyBody(ball);
+		ball = createBall(world, oldPos.x, oldPos.y, ballRadius, false, 1.0);
+		ball.SetLinearVelocity(oldVel);
+	    }
+	} else {
+	    // Add a load of guards
+	    var bound = 24;
+	    createBox(world, (x)*gridSize+24, (y-1)*gridSize+24-bound, 24*3, 24, true);
+	    createBox(world, (x)*gridSize+24, (y+1)*gridSize+24+bound, 24*3, 24, true);
+	    createBox(world, (x-1)*gridSize+24-bound, (y)*gridSize+24, 24, 24*3, true);
+	    createBox(world, (x+1)*gridSize+24+bound, (y)*gridSize+24, 24, 24*3, true);
+	    dropping_into_hole = true;
+	}
     }
 
 }
+
+function findSaveTile(room)
+{
+    // finds the save tile in this room and returns the place to start the player
+    // as a b2Vec2.
+    var levelData = levels[room].map;
+    for(var l = 0;l< levelData.length; l++) {
+	var line : string = levelData[l];
+	for (var x =0;x<line.length;x++) {
+	    if(line[x] == '@') {
+		return new b2Vec2(x*48+24, l*48+24);
+	    }
+	}
+    }
+    return null;
+}
+
+function kill_player()
+{
+    
+    ballStartPos = findSaveTile(saveRoom);
+    currentLevelName = saveRoom;
+    resetLevel();
+}
+
 function step(cnt) {
     var stepping = false;
     var timeStep = 1.0/60;
@@ -361,6 +422,8 @@ function createGround(world) {
 
 function resetLevel(): void
 {
+    dropping_into_hole = false;
+    ballRadius = 30;
     world = createWorld();
     initWorld(world);
 }
@@ -377,6 +440,7 @@ function firstTimeInit(): void
     launchPower = 0;
     par = 5;
     saveRoom = "Entryway";
+    currentLevelName = saveRoom;
 }
 
 var world;
