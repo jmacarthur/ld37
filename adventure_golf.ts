@@ -50,7 +50,7 @@ function drawChar(context, c, x, y)
 {
     c = c.charCodeAt(0);
     if(c > 0) {
-        context.drawImage(images["bitfont"], c*6, 0, 6,8, x, y, 12, 16);
+        context.drawImage(images["bitfont-big"], c*12, 0, 12,16, x, y, 12, 16);
     }
 }
 
@@ -276,11 +276,11 @@ function checkStopped()
     if(speed < 500 && currentTile != "v" && currentTile != "<" && currentTile != ">" && currentTile != "^") {
 	ball.SetLinearVelocity(new b2Vec2(0,0));
 	ball.SetAngularVelocity(0);
-	console.log("Detected stopped ball");
+	//console.log("Detected stopped ball");
 	// Cheekily put the sleeping flag on this object
 	ball.m_flags |= b2Body.e_sleepFlag;
 	if(par == 0 && fading_animation == 0) {
-	    
+	    console.log("Ball is stopped and out of power");
 	    fading_animation = 100;
 	}
     }
@@ -293,7 +293,7 @@ function checkTile()
     var y = Math.floor(pos.y/gridSize);
     currentTile = levelData[y][x];
     if (levelData[y][x] == "@") {
-	console.log("Passing over regenerator tile!");
+	//console.log("Passing over regenerator tile!");
 	saveRoom = currentLevelName;
 	if(par<5) par = 5;
     } else if (levelData[y][x] == "v") {
@@ -353,6 +353,7 @@ function kill_player()
     
     ballStartPos = findSaveTile(saveRoom);
     currentLevelName = saveRoom;
+    par = 5;
     resetLevel();
 }
 function checkAnimations()
@@ -447,10 +448,10 @@ function createGround(world) {
 
 function resetLevel(): void
 {
+    console.log("Level reset");
     dropping_into_hole = false;
     ballRadius = 30;
     fading_animation = 0;
-    par = 1;
     world = createWorld();
     initWorld(world);
 }
@@ -460,7 +461,7 @@ function firstTimeInit(): void
     ballStartPos = new b2Vec2(320,96);
     playerImage = getImage("ball");
     images = new Array();
-    imagelist = [ "floor", "arrow", "bitfont", "recharger", "recharger-lit", "wall", "sidebar", "slope_south","slope_north","slope_east","slope_west", "hole2" ];
+    imagelist = [ "floor", "arrow", "bitfont-big", "recharger", "recharger-lit", "wall", "sidebar", "slope_south","slope_north","slope_east","slope_west", "hole2" ];
     for(var i=0;i<imagelist.length;i++) {
 	images[imagelist[i]] = getImage(imagelist[i]);
     }
