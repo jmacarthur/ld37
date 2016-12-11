@@ -28,6 +28,7 @@ var saveRoom;
 var gridSize = 48;
 var currentTile = "";
 var dropping_into_hole = false;
+var playerDeathAnimation = 0;
 var ballRadius = 30;
 var oil_needed = 99;
 var enemies;
@@ -135,6 +136,15 @@ function drawWorld(world, context) {
 	context.globalAlpha = (fading_animation/100);
 	context.drawImage(playerImage, pos.x-32, pos.y-32);
 	context.restore();
+    } else if (playerDeathAnimation > 0) {
+	context.drawImage(playerImage, pos.x-32, pos.y-32);
+	context.save();
+	context.globalCompositeOperation = "multiply";
+	context.fillStyle = "#ff0000";
+	context.globalAlpha = ((100-(playerDeathAnimation/2))/100);
+	context.fillRect(0,0,SCREENWIDTH,SCREENHEIGHT);
+	context.restore();
+
     }else {
 	context.drawImage(playerImage, pos.x-32, pos.y-32);
     }
@@ -411,6 +421,12 @@ function checkAnimations()
 	    kill_player();
 	}
     }
+    if(playerDeathAnimation > 0) {
+	playerDeathAnimation -= 1;
+	if(playerDeathAnimation <= 0) {
+	    kill_player();
+	}
+    }
 }
 
 function moveEnemies()
@@ -420,7 +436,38 @@ function moveEnemies()
 	    enemies[i].x += enemies[i].dx;
 	    if(enemies[i].x >= 576-48 || enemies[i].x <= 0) enemies[i].dx = -enemies[i].dx;
 	}
-	
+	// Check for collisions
+	// Side collisions
+	var ballPos = ball.GetCenterPosition();
+	// You don't really need the first two if statements here; they are good for accuracy though.
+	if(enemies[i].x - ballPos.x < ballRadius && ballPos.x - enemies[i].x+48 < ballRadius
+	  && enemies[i].y < ballPos.y-ballRadius/2 && enemies[i].y+48 > ballPos.y+ballRadius/2)
+	{
+	    // Horizontal collision
+	    console.log("enemy collisions - horizontal");
+	    playerDeathAnimation = 100;
+	}
+	if(enemies[i].y - ballPos.y < ballRadius && ballPos.y - enemies[i].y+48 < ballRadius
+	   && enemies[i].x < ballPos.x-ballRadius/2 && enemies[i].x+48 > ballPos.x+ballRadius/2)
+	    
+	{
+	    // Vertical collision
+	    console.log("enemy collisions - vertical");
+	    playerDeathAnimation = 100;
+	}
+
+	for(var c1 = 0; c1 < 2; c1++) {
+	    for(var c2 = 0; c2 < 2; c2++) {
+		var dx = enemies[i].x + c1 * 48 - ballPos.x;
+		var dy = enemies[i].y + c2 * 48 - ballPos.y;
+		var dist = (dx*dx)+(dy*dy);
+		if(dist < ballRadius*ballRadius) {
+		    // Corner collisions
+		    console.log("enemy collisions - corner");
+		    playerDeathAnimation = 100;
+		}
+	    }
+	}
     }
 }
 
@@ -531,6 +578,7 @@ function resetLevel(): void
     dropping_into_hole = false;
     ballRadius = 30;
     fading_animation = 0;
+    playerDeathAnimation = 0;
     levelData = levels[currentLevelName].map;
     liftEnemies();
     world = createWorld();
