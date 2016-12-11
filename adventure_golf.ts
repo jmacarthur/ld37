@@ -102,12 +102,17 @@ function drawWorld(world, context) {
 	context.scale(30/ballRadius, 30/ballRadius);
 	context.drawImage(playerImage, 0, 0);
 	context.restore();
-    } else {
+    } else if (fading_animation > 0) {
+	context.save();
+	context.globalAlpha = (fading_animation/100);
+	context.drawImage(playerImage, pos.x-32, pos.y-32);
+	context.restore();
+    }else {
 	context.drawImage(playerImage, pos.x-32, pos.y-32);
     }
 
 
-    if(ball.IsSleeping()) {
+    if(ball.IsSleeping() && par > 0) {
 	context.save();
 	context.translate(pos.x, pos.y);
 	context.rotate(radians(direction));
@@ -211,6 +216,8 @@ var canvasHeight;
 var canvasTop;
 var canvasLeft;
 var ballStartPos;
+var fading_animation = 0;
+
 function processKeys() {
     if(keysDown[37] || keysDown[65]) direction -= 4;
     if(keysDown[39] || keysDown[68]) direction += 4;
@@ -272,6 +279,10 @@ function checkStopped()
 	console.log("Detected stopped ball");
 	// Cheekily put the sleeping flag on this object
 	ball.m_flags |= b2Body.e_sleepFlag;
+	if(par == 0 && fading_animation == 0) {
+	    
+	    fading_animation = 100;
+	}
     }
 }
 
@@ -295,7 +306,8 @@ function checkTile()
 	ball.ApplyForce( new b2Vec2(500000,0), ball.GetCenterPosition() );
     } else if (levelData[y][x] == "o") {
 	if (dropping_into_hole) {
-	    ballRadius += 0.2;
+	    var drop_rate = 0.3;
+	    ballRadius += drop_rate;
 	    var oldPos = ball.GetCenterPosition();
 	    var oldVel = ball.GetLinearVelocity();
 	    var speed = oldVel.x*oldVel.x+oldVel.y*oldVel.y;
@@ -303,7 +315,8 @@ function checkTile()
 		kill_player();
 	    } else {
 		world.DestroyBody(ball);
-		ball = createBall(world, oldPos.x, oldPos.y, ballRadius, false, 1.0);
+		// Fugde the new position by adjusting by drop rate. Not sure why.
+		ball = createBall(world, oldPos.x+drop_rate, oldPos.y+drop_rate, ballRadius, false, 1.0);
 		ball.SetLinearVelocity(oldVel);
 	    }
 	} else {
@@ -342,6 +355,16 @@ function kill_player()
     currentLevelName = saveRoom;
     resetLevel();
 }
+function checkAnimations()
+{
+    if(fading_animation >0 ) {
+	fading_animation -= 1;
+	if(fading_animation <= 0) {
+	    kill_player();
+	}
+    }
+}
+
 
 function step(cnt) {
     var stepping = false;
@@ -354,6 +377,8 @@ function step(cnt) {
     changeScreens();
     checkStopped();
     checkTile();
+
+    checkAnimations();
     setTimeout('step(' + (cnt || 0) + ')', 10);
 }
 
@@ -424,6 +449,8 @@ function resetLevel(): void
 {
     dropping_into_hole = false;
     ballRadius = 30;
+    fading_animation = 0;
+    par = 1;
     world = createWorld();
     initWorld(world);
 }
