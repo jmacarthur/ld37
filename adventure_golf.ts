@@ -37,6 +37,18 @@ function getImage(name)
 }
 
 
+var character_to_sprite = {
+    "o": "hole2",
+    "#": "wall",
+    "=": "wall_h",
+    "|": "wall_v",
+    "@": "regenerator",
+    "v": "slope_south",
+    "^": "slope_north",
+    "<": "slope_west",
+    ">": "slope_east"
+};
+
 class Pos {
     x: number;
     y: number;
@@ -65,29 +77,25 @@ function drawString(context, string, x, y) {
 function drawWorld(world, context) {
     ctx.fillStyle = "#7f7f7f";
     ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
+    for (var b = world.m_bodyList; b; b = b.m_next) {
+	for (var s = b.GetShapeList(); s != null; s = s.GetNext()) {
+	    // I don't know why, but if we don't call this, the game slows down enormously
+	    drawShape(s, context);
+	}
+    }
 
     for(var l = 0;l< levelData.length; l++) {
 	var line : string = levelData[l];
 	for (var x =0;x<line.length;x++) {
 	    var imageName = "";
-	    if(line[x] == '#') {
-		imageName = "wall";
-	    } else if(line[x] == '@') {
+	    if(line[x] == '@') {
 		if(currentLevelName == saveRoom) {
 		    imageName = "recharger-lit";
 		} else {
 		    imageName = "recharger";
 		}
-	    } else if(line[x] == 'v') {
-		imageName = "slope_south";
-	    } else if(line[x] == '^') {
-		imageName = "slope_north";
-	    } else if(line[x] == '<') {
-		imageName = "slope_west";
-	    } else if(line[x] == '>') {
-		imageName = "slope_east";
-	    } else if(line[x] == 'o') {
-		imageName = "hole2";
+	    } else if(character_to_sprite[line[x]] !== undefined) {
+		imageName = character_to_sprite[line[x]];
 	    } else {
 		imageName = "floor";
 	    }
@@ -142,12 +150,6 @@ function drawWorld(world, context) {
 	context.stroke();
     }
     drawString(context, currentLevelName, 8, 576);
-    for (var b = world.m_bodyList; b; b = b.m_next) {
-	for (var s = b.GetShapeList(); s != null; s = s.GetNext()) {
-	    // I don't know why, but if we don't call this, the game slows down enormously
-	    drawShape(s, context);
-	}
-    }
 }
 
 function createBox(world, x, y, width, height, fixed = false) {
@@ -231,7 +233,7 @@ function processKeys() {
     } else if (launchPower > 0) {
 	// Impulse is divided by mass, so needs to be large.
 	if(ball.IsSleeping()) {
-	    var power = launchPower * 10000;
+	    var power = launchPower * 30000;
 	    ball.WakeUp();
 	    ball.ApplyImpulse( new b2Vec2(power*Math.cos(radians(direction)), power*Math.sin(radians(direction))), ball.GetCenterPosition() );
 	}
@@ -371,6 +373,7 @@ function step(cnt) {
     var stepping = false;
     var timeStep = 1.0/60;
     var iteration = 1;
+    
     world.Step(timeStep, iteration);
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     drawWorld(world, ctx);
@@ -410,7 +413,7 @@ function addLevelBoxes(levelData : Array<string>, world:any) : void
     for(var l = 0;l< levelData.length; l++) {
 	var line : string = levelData[l];
 	for (var x =0;x<line.length;x++) {
-	    if(line[x] == '#') {
+	    if(line[x] == '#' || line[x]=='|' || line[x]=='=') {
 		createBox(world, x*gridSize+24, l*gridSize+24, 24, 24, true);
 	    }
 	}
@@ -461,7 +464,7 @@ function firstTimeInit(): void
     ballStartPos = new b2Vec2(320,96);
     playerImage = getImage("ball");
     images = new Array();
-    imagelist = [ "floor", "arrow", "bitfont-big", "recharger", "recharger-lit", "wall", "sidebar", "slope_south","slope_north","slope_east","slope_west", "hole2" ];
+    imagelist = [ "floor", "arrow", "bitfont-big", "recharger", "recharger-lit", "wall", "sidebar", "slope_south","slope_north","slope_east","slope_west", "hole2", "wall_h", "wall_v" ];
     for(var i=0;i<imagelist.length;i++) {
 	images[imagelist[i]] = getImage(imagelist[i]);
     }
