@@ -29,7 +29,8 @@ var gridSize = 48;
 var currentTile = "";
 var dropping_into_hole = false;
 var ballRadius = 30;
-
+var oil_needed = 99;
+var enemies;
 function getImage(name)
 {
     var image = new Image();
@@ -37,6 +38,19 @@ function getImage(name)
     return image;
 }
 
+
+class Enemy {
+    x : number;
+    y : number;
+    dx: number;
+    sprite: number;
+    constructor(sprite, x, y) {
+	this.sprite = sprite;
+	this.x = x;
+	this.y = y;
+	this.dx = 1;
+    }
+}
 
 var character_to_sprite = {
     "o": "hole2",
@@ -48,7 +62,8 @@ var character_to_sprite = {
     "^": "slope_north",
     "<": "slope_west",
     ">": "slope_east",
-    "$": "oil-drum"
+    "$": "oil-drum",
+    "n": ""
 };
 
 class Pos {
@@ -125,6 +140,11 @@ function drawWorld(world, context) {
     }
 
 
+    for(var i=0;i<enemies.length;i++) {
+	sprite = enemies[i].sprite;
+	context.drawImage(images[sprite], enemies[i].x, enemies[i].y);	
+    }
+    
     if(ball.IsSleeping() && par > 0) {
 	context.save();
 	context.translate(pos.x, pos.y);
@@ -135,6 +155,7 @@ function drawWorld(world, context) {
 
     context.drawImage(images["sidebar"], 576,0);
     drawString(context, ""+par, 576+24, 48);
+    drawString(context, ""+oil_needed, 576+20, 128);
 
     var powerBarX = 576+12;
     var powerBarY = 576-12;
@@ -302,19 +323,19 @@ function checkTile()
     var x = Math.floor(pos.x/gridSize);
     var y = Math.floor(pos.y/gridSize);
     currentTile = levelData[y][x];
-    if (levelData[y][x] == "@") {
+    if (currentTile == "@") {
 	//console.log("Passing over regenerator tile!");
 	saveRoom = currentLevelName;
 	if(par<5) par = 5;
-    } else if (levelData[y][x] == "v") {
+    } else if (currentTile == "v") {
 	ball.ApplyForce( new b2Vec2(0,500000), ball.GetCenterPosition() );
-    } else if (levelData[y][x] == "^") {
+    } else if (currentTile == "^") {
 	ball.ApplyForce( new b2Vec2(0,-500000), ball.GetCenterPosition() );
-    } else if (levelData[y][x] == "<") {
+    } else if (currentTile == "<") {
 	ball.ApplyForce( new b2Vec2(-500000,0), ball.GetCenterPosition() );
-    } else if (levelData[y][x] == ">") {
+    } else if (currentTile == ">") {
 	ball.ApplyForce( new b2Vec2(500000,0), ball.GetCenterPosition() );
-    } else if (levelData[y][x] == "o") {
+    } else if (currentTile == "o") {
 	if (dropping_into_hole) {
 	    var drop_rate = 0.3;
 	    ballRadius += drop_rate;
@@ -338,17 +359,32 @@ function checkTile()
 	    createBox(world, (x+1)*gridSize+24+bound, (y)*gridSize+24, 24, 24*3, true);
 	    dropping_into_hole = true;
 	}
+    } else if (currentTile == "$") {
+	oil_needed -= 1;
+	updateMap(x,y,".");
     }
+}
 
+function updateMap(x : number, y:number, newTile)
+{
+    var newLine = "";
+    for(var i=0;i<levelData[y].length;i++) {
+	if(i==x) {
+	    newLine += newTile;
+	} else {
+	    newLine += levelData[y][i];
+	}
+    }
+    levelData[y] = newLine;
 }
 
 function findSaveTile(room)
 {
     // finds the save tile in this room and returns the place to start the player
     // as a b2Vec2.
-    var levelData = levels[room].map;
-    for(var l = 0;l< levelData.length; l++) {
-	var line : string = levelData[l];
+    var ld = levels[room].map;
+    for(var l = 0;l< ld.length; l++) {
+	var line : string = ld[l];
 	for (var x =0;x<line.length;x++) {
 	    if(line[x] == '@') {
 		return new b2Vec2(x*48+24, l*48+24);
@@ -377,6 +413,17 @@ function checkAnimations()
     }
 }
 
+function moveEnemies()
+{
+    for(var i=0;i<enemies.length;i++) {
+	if(enemies[i].sprite == "enemy1") {
+	    enemies[i].x += enemies[i].dx;
+	    if(enemies[i].x >= 576-48 || enemies[i].x <= 0) enemies[i].dx = -enemies[i].dx;
+	}
+	
+    }
+}
+
 
 function step(cnt) {
     var stepping = false;
@@ -390,7 +437,7 @@ function step(cnt) {
     changeScreens();
     checkStopped();
     checkTile();
-
+    moveEnemies();
     checkAnimations();
     setTimeout('step(' + (cnt || 0) + ')', 10);
 }
@@ -459,12 +506,33 @@ function createGround(world) {
     return world.CreateBody(groundBd)
 }
 
+function liftEnemies(): void
+{
+    enemies = new Array(); 
+    console.log("Lifting enemies")
+
+    for(var l = 0;l <levelData.length; l++) {
+	var line : string = levelData[l];
+	console.log("Lifting enemies from "+line)
+	for (var x =0;x<line.length;x++) {
+	    if(line[x] == 'n')
+	    {
+		console.log("Lifting enemy of type "+line[x])
+		enemies.push(new Enemy("enemy1", x*gridSize, l*gridSize));
+	    }	    
+	}
+    }
+}
+    
+
 function resetLevel(): void
 {
     console.log("Level reset");
     dropping_into_hole = false;
     ballRadius = 30;
     fading_animation = 0;
+    levelData = levels[currentLevelName].map;
+    liftEnemies();
     world = createWorld();
     initWorld(world);
 }
@@ -474,7 +542,7 @@ function firstTimeInit(): void
     ballStartPos = new b2Vec2(320,96);
     playerImage = getImage("ball2");
     images = new Array();
-    imagelist = [ "floor", "arrow2", "bitfont-big", "recharger", "recharger-lit", "wall", "sidebar", "slope_south","slope_north","slope_east","slope_west", "hole2", "wall_h", "wall_v", "oil-drum" ];
+    imagelist = [ "floor", "arrow2", "bitfont-big", "recharger", "recharger-lit", "wall", "sidebar", "slope_south","slope_north","slope_east","slope_west", "hole2", "wall_h", "wall_v", "oil-drum", "enemy1" ];
     for(var i=0;i<imagelist.length;i++) {
 	images[imagelist[i]] = getImage(imagelist[i]);
     }
@@ -483,7 +551,8 @@ function firstTimeInit(): void
     saveRoom = "Entryway";
     currentLevelName = saveRoom;
     ballStartVel = new b2Vec2(0,0);
-
+    oil_needed = 99;
+    enemies = new Array();
 }
 
 var world;
