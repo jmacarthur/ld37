@@ -29,6 +29,7 @@ var gridSize = 48;
 var currentTile = "";
 var dropping_into_hole = false;
 var ballRadius = 30;
+
 function getImage(name)
 {
     var image = new Image();
@@ -46,7 +47,8 @@ var character_to_sprite = {
     "v": "slope_south",
     "^": "slope_north",
     "<": "slope_west",
-    ">": "slope_east"
+    ">": "slope_east",
+    "$": "oil-drum"
 };
 
 class Pos {
@@ -88,6 +90,7 @@ function drawWorld(world, context) {
 	var line : string = levelData[l];
 	for (var x =0;x<line.length;x++) {
 	    var imageName = "";
+	    context.drawImage(images["floor"], x*gridSize, l*gridSize);
 	    if(line[x] == '@') {
 		if(currentLevelName == saveRoom) {
 		    imageName = "recharger-lit";
@@ -99,7 +102,9 @@ function drawWorld(world, context) {
 	    } else {
 		imageName = "floor";
 	    }
-	    context.drawImage(images[imageName], x*gridSize, l*gridSize);
+	    if(imageName != "") {
+		context.drawImage(images[imageName], x*gridSize, l*gridSize);
+	    }
 	}
     }
 
@@ -124,7 +129,7 @@ function drawWorld(world, context) {
 	context.save();
 	context.translate(pos.x, pos.y);
 	context.rotate(radians(direction));
-	context.drawImage(images["arrow"],-16,-16);
+	context.drawImage(images["arrow2"],-16,-16);
 	context.restore();
     }
 
@@ -218,6 +223,7 @@ var canvasHeight;
 var canvasTop;
 var canvasLeft;
 var ballStartPos;
+var ballStartVel;
 var fading_animation = 0;
 
 function processKeys() {
@@ -245,9 +251,11 @@ function processKeys() {
 
 function changeScreens() {
     var pos = ball.GetCenterPosition();
+    var vel = ball.GetLinearVelocity();
+    ballStartVel = vel;
     if(pos.y<32 && levels[currentLevelName].n_to !== undefined) {
 	ballStartPos = new b2Vec2(pos.x, 512-32-8);
-	currentLevelName = levels[currentLevelName].n_to;
+	currentLevelName = levels[currentLevelName].n_to;	
 	resetLevel();
 	return;
     }
@@ -355,6 +363,7 @@ function kill_player()
     
     ballStartPos = findSaveTile(saveRoom);
     currentLevelName = saveRoom;
+    ballStartVel = new b2Vec2(0,0);
     par = 5;
     resetLevel();
 }
@@ -435,6 +444,7 @@ function createWorld() {
     createGround(world);
 
     ball = createBall(world, ballStartPos.x, ballStartPos.y, 30, false, 1.0);
+    ball.SetLinearVelocity(ballStartVel);
 
     return world;
 }
@@ -462,9 +472,9 @@ function resetLevel(): void
 function firstTimeInit(): void
 {
     ballStartPos = new b2Vec2(320,96);
-    playerImage = getImage("ball");
+    playerImage = getImage("ball2");
     images = new Array();
-    imagelist = [ "floor", "arrow", "bitfont-big", "recharger", "recharger-lit", "wall", "sidebar", "slope_south","slope_north","slope_east","slope_west", "hole2", "wall_h", "wall_v" ];
+    imagelist = [ "floor", "arrow2", "bitfont-big", "recharger", "recharger-lit", "wall", "sidebar", "slope_south","slope_north","slope_east","slope_west", "hole2", "wall_h", "wall_v", "oil-drum" ];
     for(var i=0;i<imagelist.length;i++) {
 	images[imagelist[i]] = getImage(imagelist[i]);
     }
@@ -472,6 +482,8 @@ function firstTimeInit(): void
     par = 5;
     saveRoom = "Entryway";
     currentLevelName = saveRoom;
+    ballStartVel = new b2Vec2(0,0);
+
 }
 
 var world;
