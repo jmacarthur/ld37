@@ -19,7 +19,7 @@ var direction : number = 90;
 var playerImage;
 var levelData;
 var SCREENWIDTH = 640;
-var SCREENHEIGHT = 576;
+var SCREENHEIGHT = 576+16;
 var currentLevelName;
 var par;
 var images : Array<any>;
@@ -32,6 +32,8 @@ var playerDeathAnimation = 0;
 var ballRadius = 30;
 var oil_needed = 99;
 var enemies;
+var audio;
+
 function getImage(name)
 {
     var image = new Image();
@@ -368,9 +370,11 @@ function checkTile()
 	    createBox(world, (x-1)*gridSize+24-bound, (y)*gridSize+24, 24, 24*3, true);
 	    createBox(world, (x+1)*gridSize+24+bound, (y)*gridSize+24, 24, 24*3, true);
 	    dropping_into_hole = true;
+	    audio['drop'].play();
 	}
     } else if (currentTile == "$") {
 	oil_needed -= 1;
+	audio["collect"].play();
 	updateMap(x,y,".");
     }
 }
@@ -422,10 +426,15 @@ function checkAnimations()
 	}
     }
     if(playerDeathAnimation > 0) {
+	audio["killed"].play();
 	playerDeathAnimation -= 1;
 	if(playerDeathAnimation <= 0) {
 	    kill_player();
 	}
+    }
+    var contactList = ball.GetContactList();
+    if(contactList != null && contactList.length > 0) {
+	console.log("Ball contact!"); // TODO: Doesn't work!
     }
 }
 
@@ -594,6 +603,13 @@ function firstTimeInit(): void
     for(var i=0;i<imagelist.length;i++) {
 	images[imagelist[i]] = getImage(imagelist[i]);
     }
+
+    audio = new Array();
+    audiolist = [ "boing", "bounce", "collect", "drop", "killed" ];
+    for(var i=0;i<audiolist.length;i++){
+	audio[audiolist[i]] = new Audio("audio/"+audiolist[i]+".wav");
+    }
+    
     launchPower = 0;
     par = 5;
     saveRoom = "Entryway";
