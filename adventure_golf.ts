@@ -85,6 +85,8 @@ function drawWorld(world, context) {
 		imageName = "slope_west";
 	    } else if(line[x] == '>') {
 		imageName = "slope_east";
+	    } else if(line[x] == 'o') {
+		imageName = "hole2";
 	    } else {
 		imageName = "floor";
 	    }
@@ -368,7 +370,7 @@ function firstTimeInit(): void
     ballStartPos = new b2Vec2(320,96);
     playerImage = getImage("ball");
     images = new Array();
-    imagelist = [ "floor", "arrow", "bitfont", "recharger", "recharger-lit", "wall", "sidebar", "slope_south","slope_north","slope_east","slope_west" ];
+    imagelist = [ "floor", "arrow", "bitfont", "recharger", "recharger-lit", "wall", "sidebar", "slope_south","slope_north","slope_east","slope_west", "hole2" ];
     for(var i=0;i<imagelist.length;i++) {
 	images[imagelist[i]] = getImage(imagelist[i]);
     }
